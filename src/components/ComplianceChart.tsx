@@ -35,14 +35,14 @@ export const ComplianceChart = () => {
     const displayData = data.slice(0, 30);
 
     const getColor = (val: number) => {
-        if (val >= 0.75) return '#16a34a'; // green-600
-        if (val >= 0.50) return '#d97706'; // amber-600
-        return '#dc2626'; // red-600
+        if (val >= 0.75) return '#10b981'; // emerald-500
+        if (val >= 0.50) return '#f59e0b'; // amber-500
+        return '#ef4444'; // red-500
     };
 
     return (
-        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm h-[400px]">
-            <h3 className="text-lg font-bold text-gray-900 mb-6">
+        <div className="bg-white p-6 rounded-xl border-2 border-blue-100/50 shadow-lg h-[400px] bg-gradient-to-br from-white to-blue-50/30">
+            <h3 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-blue-900 bg-clip-text text-transparent mb-6">
                 {selectedDistrict ? 'Village Progress' : 'District Comparison'}
             </h3>
 

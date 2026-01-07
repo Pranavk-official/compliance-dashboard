@@ -11,8 +11,8 @@ function App() {
   return (
     <DashboardLayout>
       {districts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-[500px] bg-white rounded-xl border-2 border-dashed border-gray-300">
-          <h2 className="text-xl font-semibold text-gray-700">No Data Loaded</h2>
+        <div className="flex flex-col items-center justify-center h-[500px] bg-gradient-to-br from-white to-blue-50/50 rounded-xl border-2 border-dashed border-blue-200 shadow-inner">
+          <h2 className="text-xl font-semibold bg-gradient-to-r from-gray-700 to-blue-700 bg-clip-text text-transparent">No Data Loaded</h2>
           <p className="text-gray-500 mt-2">Please upload the "DLS - Check List.xlsx" file to get started.</p>
         </div>
       ) : (

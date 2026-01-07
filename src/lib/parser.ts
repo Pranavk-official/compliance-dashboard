@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx';
 import type { District, Village, ComplianceItem } from './types';
 
 // Row Indices (0-based) based on inspection
-const ROW_VILLAGE_NAME = 1;
+// const ROW_VILLAGE_NAME = 1;
 
 // Section 9(2) Items: Rows 59-72 (Indices 59 to 72 inclusive? Let's re-verify line numbers vs array index)
 // In `inspect_rows_deep.js`: "Row 59: Percentage of Digital Survey Completed"
@@ -12,13 +12,13 @@ const ROW_VILLAGE_NAME = 1;
 // Yes, `data.forEach((row, index) => ... console.log('Row ' + index ...)` 
 // So indices are correct.
 
-const SEC92_START_ROW = 59;
-const SEC92_END_ROW = 72; // Inclusive
+// const SEC92_START_ROW = 59;
+// const SEC92_END_ROW = 72; // Inclusive
 
-const SEC13_START_ROW = 75;
-const SEC13_END_ROW = 87; // Inclusive
+// const SEC13_START_ROW = 75;
+// const SEC13_END_ROW = 87; // Inclusive
 
-const DATA_START_COL = 3; // "PARASUVAIKKAL" is at index 3 in Row 53 (which is `Row 1` relative to data? No, `inspect_rows_deep` showed `Row 53` has Village names).
+// const DATA_START_COL = 3; // "PARASUVAIKKAL" is at index 3 in Row 53 (which is `Row 1` relative to data? No, `inspect_rows_deep` showed `Row 53` has Village names).
 // Wait, `inspect_rows_deep` showed:
 // Row 53: [null,null,"Village","PARASUVAIKKAL","KEEZHATTINGAL"]
 // So Village Names are at Row 53?

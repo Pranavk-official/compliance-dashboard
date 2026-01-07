@@ -183,14 +183,16 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
     // New "Welcome" Screen
     if (districts.length === 0) {
         return (
-            <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-                <Card className="w-full max-w-lg shadow-xl border-gray-100 overflow-hidden">
-                    <div className="bg-blue-600 p-8 text-center">
-                        <div className="bg-white/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col items-center justify-center p-4">
+                <Card className="w-full max-w-lg shadow-2xl border-2 border-blue-100/50 overflow-hidden">
+                    <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 p-8 text-center relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
+                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24"></div>
+                        <div className="bg-white/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm shadow-lg relative z-10">
                             <LayoutDashboard className="text-white w-8 h-8" />
                         </div>
-                        <h1 className="text-2xl font-bold text-white">Compliance Dashboard</h1>
-                        <p className="text-blue-100 mt-2">Government of Kerala - Digital Survey</p>
+                        <h1 className="text-3xl font-bold text-white relative z-10">Compliance Dashboard</h1>
+                        <p className="text-blue-100 mt-2 relative z-10">Government of Kerala - Digital Survey</p>
                     </div>
 
                     <div className="p-8">
@@ -256,15 +258,15 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
 
     // Main Dashboard Layout (Data Source Loaded)
     return (
-        <div className="min-h-screen bg-gray-50/50 flex flex-col">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 flex flex-col">
             {/* Header */}
-            <header className="bg-background border-b border-border px-6 py-4 flex items-center justify-between shadow-sm sticky top-0 z-20">
+            <header className="bg-gradient-to-r from-white via-blue-50/30 to-white border-b-2 border-blue-100/50 px-6 py-4 flex items-center justify-between shadow-md sticky top-0 z-20 backdrop-blur-sm bg-white/80">
                 <div className="flex items-center gap-3">
-                    <div className="bg-blue-600 p-2 rounded-lg">
+                    <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-2.5 rounded-xl shadow-lg">
                         <LayoutDashboard className="text-white w-6 h-6" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold text-foreground leading-none">Compliance Dashboard</h1>
+                        <h1 className="text-xl font-bold bg-gradient-to-r from-blue-900 to-indigo-900 bg-clip-text text-transparent leading-none">Compliance Dashboard</h1>
                         <p className="text-xs text-muted-foreground mt-1">Government of Kerala</p>
                     </div>
                 </div>

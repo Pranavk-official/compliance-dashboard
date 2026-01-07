@@ -107,7 +107,7 @@ export const VillageTable = () => {
     };
 
     return (
-        <Card id="village-table" className="flex flex-col h-[700px]">
+        <Card id="village-table" className="flex flex-col h-[700px] shadow-lg border-2 border-blue-100/50">
             <VillageDetailModal
                 village={selectedVillage}
                 open={isModalOpen}
@@ -116,7 +116,7 @@ export const VillageTable = () => {
             />
 
             {/* Toolbar */}
-            <div className="p-4 border-b flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="p-4 border-b-2 border-blue-100/30 flex flex-col md:flex-row items-center justify-between gap-4 bg-gradient-to-r from-white via-blue-50/20 to-white">
                 <div className="flex flex-col md:flex-row items-center gap-4 flex-1 w-full">
                     {/* Search */}
                     <div className="relative flex-1 max-w-sm w-full">
@@ -179,7 +179,7 @@ export const VillageTable = () => {
             {/* Table */}
             <div className="flex-1 overflow-auto">
                 <Table>
-                    <TableHeader className="bg-gray-50/50 sticky top-0 z-10 shadow-sm">
+                    <TableHeader className="bg-gradient-to-r from-blue-50 via-indigo-50/40 to-blue-50 sticky top-0 z-10 shadow-sm border-b-2">
                         <TableRow className="hover:bg-gray-50/50">
                             <TableHead className="w-[50px] font-semibold text-gray-700">Actions</TableHead>
                             <TableHead className="w-[200px] font-semibold text-gray-700">Village</TableHead>

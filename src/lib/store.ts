@@ -1,7 +1,8 @@
 
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { District, Village } from './types';
+import type { District } from './types';
 
 interface DashboardState {
     districts: District[];
