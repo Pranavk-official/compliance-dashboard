@@ -1,0 +1,353 @@
+import React from 'react';
+import { useStore } from '../lib/store';
+import { LayoutDashboard, FileUp, Download, Link as LinkIcon, Loader2, RefreshCw, LogOut, FileSpreadsheet } from 'lucide-react';
+import { parseExcel } from '../lib/parser';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+import { cn } from '../lib/utils';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+
+const DashboardSkeleton = () => {
+    return (
+        <div className="min-h-screen bg-gray-50/50 flex flex-col">
+            {/* Header Skeleton */}
+            <header className="bg-background border-b border-border px-6 py-4 flex items-center justify-between shadow-sm sticky top-0 z-20">
+                <div className="flex items-center gap-3">
+                    <Skeleton className="h-10 w-10 rounded-lg" />
+                    <div>
+                        <Skeleton className="h-6 w-48 mb-2" />
+                        <Skeleton className="h-3 w-32" />
+                    </div>
+                </div>
+                <div className="flex items-center gap-3">
+                    <Skeleton className="h-9 w-24 rounded-lg" />
+                    <Skeleton className="h-9 w-32 rounded-lg" />
+                    <Skeleton className="h-9 w-32 rounded-lg" />
+                </div>
+            </header>
+
+            {/* Sub-Header Skeleton */}
+            <div className="bg-background border-b border-border px-6 py-3 flex items-center gap-6 sticky top-[73px] z-10">
+                <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-16" />
+                    <Skeleton className="h-10 w-[180px] rounded-md" />
+                </div>
+                <div className="bg-muted p-1 rounded-lg flex items-center">
+                    <Skeleton className="h-9 w-[200px] rounded-md" />
+                </div>
+            </div>
+
+            {/* Main Content Skeleton */}
+            <main className="flex-1 p-6 overflow-auto">
+                <div className="max-w-7xl mx-auto space-y-6">
+                    {/* KPI Grid Skeleton */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {[1, 2, 3, 4].map((i) => (
+                            <Skeleton key={i} className="h-32 rounded-xl" />
+                        ))}
+                    </div>
+                    {/* Chart/Table Skeleton */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <Skeleton className="lg:col-span-2 h-[400px] rounded-xl" />
+                        <Skeleton className="h-[400px] rounded-xl" />
+                    </div>
+                    <Skeleton className="h-[300px] rounded-xl" />
+                </div>
+            </main>
+        </div>
+    );
+};
+
+export const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
+    const {
+        setDistricts,
+        districts,
+        selectedDistrict,
+        setSelectedDistrict,
+        complianceType,
+        setComplianceType,
+        currentSheetUrl,
+        setCurrentSheetUrl
+    } = useStore();
+
+    const [sheetUrlInput, setSheetUrlInput] = React.useState('');
+    const [isLoading, setIsLoading] = React.useState(false);
+
+    // Auto-load persisted URL
+    React.useEffect(() => {
+        if (currentSheetUrl && districts.length === 0) {
+            loadFromUrl(currentSheetUrl);
+        }
+    }, []); // Run once on mount
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            try {
+                setIsLoading(true);
+                const data = await parseExcel(e.target.files[0]);
+                setDistricts(data);
+                setCurrentSheetUrl(null); // Clear sheet URL as we are using file
+            } catch (error) {
+                console.error("Failed to parse", error);
+                alert("Failed to parse file");
+            } finally {
+                setIsLoading(false);
+            }
+        }
+    };
+
+    const loadFromUrl = async (url: string) => {
+        // Extract ID: https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit...
+        const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+        if (!match) {
+            alert("Invalid Google Sheet URL. Could not find Sheet ID.");
+            return;
+        }
+
+        const sheetId = match[1];
+        const exportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+
+        try {
+            setIsLoading(true);
+            const response = await fetch(exportUrl);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch: ${response.statusText}`);
+            }
+            const blob = await response.blob();
+            const file = new File([blob], "google-sheet.xlsx", { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+            const data = await parseExcel(file);
+            setDistricts(data);
+            setCurrentSheetUrl(url); // Store the original URL for refreshing
+        } catch (error) {
+            console.error("Failed to load from URL", error);
+            alert("Failed to load Google Sheet. Ensure it is discoverable via link (Anyone with the link can view).");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleUrlSubmit = () => {
+        if (!sheetUrlInput) return;
+        loadFromUrl(sheetUrlInput);
+    };
+
+    const handleRefresh = () => {
+        if (currentSheetUrl) {
+            loadFromUrl(currentSheetUrl);
+        }
+    };
+
+    const handleChangeSource = () => {
+        if (confirm("Are you sure you want to change source? Current data will be cleared.")) {
+            setDistricts([]);
+            setCurrentSheetUrl(null);
+            setSheetUrlInput('');
+            setSelectedDistrict(null);
+        }
+    };
+
+    const handleExportSummary = () => {
+        // District-wise summary
+        const summary = districts.map(d => ({
+            District: d.name,
+            'Total Villages': d.total_villages,
+            'Avg 9(2) %': (d.avg_92_percent * 100).toFixed(2) + '%',
+            'Avg 13 %': (d.avg_13_percent * 100).toFixed(2) + '%'
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(summary);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Summary");
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        saveAs(new Blob([wbout], { type: "application/octet-stream" }), 'District_Summary.xlsx');
+    };
+
+    // Show Skeleton when loading and no data exists
+    if (isLoading && districts.length === 0) {
+        return <DashboardSkeleton />;
+    }
+
+    // New "Welcome" Screen
+    if (districts.length === 0) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+                <Card className="w-full max-w-lg shadow-xl border-gray-100 overflow-hidden">
+                    <div className="bg-blue-600 p-8 text-center">
+                        <div className="bg-white/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+                            <LayoutDashboard className="text-white w-8 h-8" />
+                        </div>
+                        <h1 className="text-2xl font-bold text-white">Compliance Dashboard</h1>
+                        <p className="text-blue-100 mt-2">Government of Kerala - Digital Survey</p>
+                    </div>
+
+                    <div className="p-8">
+                        <Tabs defaultValue="upload" className="w-full">
+                            <TabsList className="grid w-full grid-cols-2 mb-8">
+                                <TabsTrigger value="upload" className="flex items-center gap-2">
+                                    <FileUp className="w-4 h-4" />
+                                    Upload File
+                                </TabsTrigger>
+                                <TabsTrigger value="link" className="flex items-center gap-2">
+                                    <LinkIcon className="w-4 h-4" />
+                                    Google Sheet
+                                </TabsTrigger>
+                            </TabsList>
+
+                            <TabsContent value="upload" className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 mt-0">
+                                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 hover:bg-blue-50/50 transition-colors group cursor-pointer relative">
+                                    <input
+                                        type="file"
+                                        accept=".xlsx, .csv"
+                                        onChange={handleFileUpload}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        disabled={isLoading}
+                                    />
+                                    <div className="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors">
+                                        <FileSpreadsheet className="text-blue-600 w-6 h-6" />
+                                    </div>
+                                    <h3 className="text-gray-900 font-medium">Upload Excel File</h3>
+                                    <p className="text-sm text-muted-foreground mt-1">Drag and drop or click to browse</p>
+                                </div>
+                                <p className="text-xs text-center text-muted-foreground">Supported formats: .xlsx, .csv</p>
+                            </TabsContent>
+
+                            <TabsContent value="link" className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 mt-0">
+                                <div className="space-y-2">
+                                    <Label htmlFor="sheet-url">Google Sheet Link</Label>
+                                    <Input
+                                        id="sheet-url"
+                                        placeholder="https://docs.google.com/spreadsheets/d/..."
+                                        value={sheetUrlInput}
+                                        onChange={(e) => setSheetUrlInput(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Ensure the sheet is accessible to "Anyone with the link".
+                                    </p>
+                                </div>
+                                <Button
+                                    onClick={handleUrlSubmit}
+                                    disabled={!sheetUrlInput || isLoading}
+                                    className="w-full gap-2"
+                                >
+                                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LinkIcon className="w-4 h-4" />}
+                                    Load Data
+                                </Button>
+                            </TabsContent>
+                        </Tabs>
+                    </div>
+                </Card>
+            </div>
+        );
+    }
+
+    // Main Dashboard Layout (Data Source Loaded)
+    return (
+        <div className="min-h-screen bg-gray-50/50 flex flex-col">
+            {/* Header */}
+            <header className="bg-background border-b border-border px-6 py-4 flex items-center justify-between shadow-sm sticky top-0 z-20">
+                <div className="flex items-center gap-3">
+                    <div className="bg-blue-600 p-2 rounded-lg">
+                        <LayoutDashboard className="text-white w-6 h-6" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-bold text-foreground leading-none">Compliance Dashboard</h1>
+                        <p className="text-xs text-muted-foreground mt-1">Government of Kerala</p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    {/* Refresh Button (Only for Google Sheets) */}
+                    {currentSheetUrl && (
+                        <Button
+                            variant="ghost"
+                            onClick={handleRefresh}
+                            disabled={isLoading}
+                            className="gap-2"
+                            title="Refresh Data from Google Sheet"
+                        >
+                            <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+                            Refresh Data
+                        </Button>
+                    )}
+
+                    <div className="h-6 w-px bg-border mx-1"></div>
+
+                    <Button
+                        variant="outline"
+                        onClick={handleExportSummary}
+                        className="gap-2"
+                    >
+                        <Download className="w-4 h-4" />
+                        Export Summary
+                    </Button>
+
+                    <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleChangeSource}
+                        className="gap-2 ml-2"
+                        title="Change Data Source"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        Change Source
+                    </Button>
+                </div>
+            </header>
+
+            {/* Sub-Header / Controls */}
+            {districts.length > 0 && (
+                <div className="bg-background border-b border-border px-6 py-3 flex items-center gap-6 overflow-x-auto sticky top-[73px] z-10">
+                    {/* District Selector */}
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-muted-foreground">District:</span>
+                        <Select
+                            value={selectedDistrict || "all"}
+                            onValueChange={(val) => setSelectedDistrict(val === "all" ? null : val)}
+                        >
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="All Districts" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Districts</SelectItem>
+                                {districts.map(d => (
+                                    <SelectItem key={d.name} value={d.name}>{d.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Section Toggle */}
+                    <div className="bg-muted p-1 rounded-lg flex items-center">
+                        <Tabs value={complianceType} onValueChange={(val) => setComplianceType(val as any)}>
+                            <TabsList className="grid w-[200px] grid-cols-2">
+                                <TabsTrigger value="9(2)">Section 9(2)</TabsTrigger>
+                                <TabsTrigger value="13">Section 13</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    </div>
+                </div>
+            )}
+
+            {/* Main Content */}
+            <main className="flex-1 p-6 overflow-auto">
+                <div className="max-w-7xl mx-auto space-y-6">
+                    {children}
+                </div>
+            </main>
+        </div>
+    );
+};
