@@ -18,11 +18,11 @@ function App() {
       ) : (
         <>
           <KPIGrid />
-          <div className="mt-6">
+          <div className="mt-4 sm:mt-5 md:mt-6">
             <ComplianceChart />
           </div>
-          <div className="mt-8">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Detailed Village Report</h3>
+          <div className="mt-6 sm:mt-7 md:mt-8">
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Detailed Village Report</h3>
             <VillageTable />
           </div>
         </>

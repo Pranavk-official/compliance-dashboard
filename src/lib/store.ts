@@ -18,6 +18,9 @@ interface DashboardState {
     statusFilter: 'All' | 'Completed' | 'Pending';
     setStatusFilter: (status: 'All' | 'Completed' | 'Pending') => void;
 
+    stageFilter: string | null; // Filter by stage
+    setStageFilter: (stage: string | null) => void;
+
     searchQuery: string;
     setSearchQuery: (query: string) => void;
 
@@ -39,6 +42,9 @@ export const useStore = create<DashboardState>()(
 
             statusFilter: 'All',
             setStatusFilter: (status) => set({ statusFilter: status }),
+
+            stageFilter: null,
+            setStageFilter: (stage) => set({ stageFilter: stage }),
 
             searchQuery: '',
             setSearchQuery: (query) => set({ searchQuery: query }),

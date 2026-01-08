@@ -35,6 +35,8 @@ export const VillageTable = () => {
         complianceType,
         statusFilter,
         setStatusFilter,
+        stageFilter,
+        setStageFilter,
         searchQuery,
         setSearchQuery
     } = useStore();
@@ -63,6 +65,10 @@ export const VillageTable = () => {
         });
     }
 
+    if (stageFilter) {
+        villages = villages.filter(v => v.stage === stageFilter);
+    }
+
     if (searchQuery) {
         const q = searchQuery.toLowerCase();
         villages = villages.filter(v =>
@@ -70,6 +76,10 @@ export const VillageTable = () => {
             v.districtName.toLowerCase().includes(q)
         );
     }
+
+    // Get unique stages for filter
+    const uniqueStages = Array.from(new Set(activeDistricts.flatMap(d => d.villages.map(v => v.stage))));
+    uniqueStages.sort();
 
     // Pagination (Simple)
     const [page, setPage] = useState(1);
@@ -94,8 +104,14 @@ export const VillageTable = () => {
             return {
                 District: v.districtName,
                 Village: v.name,
+                Stage: v.stage,
+                'Head Surveyor': v.headSurveyor,
+                'Government Surveyor': v.governmentSurveyor,
+                'Assistant Director': v.assistantDirector,
+                'Superintendent': v.superintendent,
                 Status: complianceType === '9(2)' ? v.sec92_status : v.sec13_status,
                 'Completion %': formatPercent(complianceType === '9(2)' ? v.sec92_percent : v.sec13_percent),
+                'Overall %': formatPercent(v.overall_percent),
                 ...itemObj
             };
         });
@@ -107,7 +123,7 @@ export const VillageTable = () => {
     };
 
     return (
-        <Card id="village-table" className="flex flex-col h-[700px] shadow-lg border-2 border-blue-100/50">
+        <Card id="village-table" className="flex flex-col min-h-[500px] h-[700px] sm:h-[750px] md:h-[700px] max-h-[80vh] shadow-lg border-2 border-blue-100/50">
             <VillageDetailModal
                 village={selectedVillage}
                 open={isModalOpen}
@@ -116,152 +132,209 @@ export const VillageTable = () => {
             />
 
             {/* Toolbar */}
-            <div className="p-4 border-b-2 border-blue-100/30 flex flex-col md:flex-row items-center justify-between gap-4 bg-gradient-to-r from-white via-blue-50/20 to-white">
-                <div className="flex flex-col md:flex-row items-center gap-4 flex-1 w-full">
-                    {/* Search */}
-                    <div className="relative flex-1 max-w-sm w-full">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search villages..."
-                            className="pl-10"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-
-                    {/* Filters */}
-                    <div className="flex items-center gap-2 w-full md:w-auto">
-                        <Filter className="w-4 h-4 text-muted-foreground hidden md:block" />
-
-                        {/* District Filter */}
-                        <Select
-                            value={selectedDistrict || "all"}
-                            onValueChange={(val) => setSelectedDistrict(val === "all" ? null : val)}
-                        >
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="All Districts" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Districts</SelectItem>
-                                {districts.map(d => (
-                                    <SelectItem key={d.name} value={d.name}>{d.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-
-                        {/* Status Filter */}
-                        <Select
-                            value={statusFilter}
-                            onValueChange={(val) => setStatusFilter(val as any)}
-                        >
-                            <SelectTrigger className="w-[150px]">
-                                <SelectValue placeholder="Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="All">All Status</SelectItem>
-                                <SelectItem value="Completed">Completed</SelectItem>
-                                <SelectItem value="Pending">Pending</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+            <div className="p-3 sm:p-4 border-b-2 border-blue-100/30 flex flex-col gap-3 sm:gap-4 bg-gradient-to-r from-white via-blue-50/20 to-white">
+                {/* Search - Full Width */}
+                <div className="relative flex-1 w-full">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Search villages..."
+                        className="pl-10 h-9 sm:h-10"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                 </div>
 
+                {/* Filters Row */}
+                <div className="flex flex-col sm:flex-row items-stretch gap-2 sm:gap-3 w-full">
+                    <Filter className="w-4 h-4 text-muted-foreground hidden md:block self-center" />
+
+                    {/* District Filter */}
+                    <Select
+                        value={selectedDistrict || "all"}
+                        onValueChange={(val) => setSelectedDistrict(val === "all" ? null : val)}
+                    >
+                        <SelectTrigger className="w-full sm:flex-1 md:w-[180px] h-9">
+                            <SelectValue placeholder="All Districts" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Districts</SelectItem>
+                            {districts.map(d => (
+                                <SelectItem key={d.name} value={d.name}>{d.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    {/* Status Filter */}
+                    <Select
+                        value={statusFilter}
+                        onValueChange={(val) => setStatusFilter(val as any)}
+                    >
+                        <SelectTrigger className="w-full sm:flex-1 md:w-[150px] h-9">
+                            <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="All">All Status</SelectItem>
+                            <SelectItem value="Completed">Completed</SelectItem>
+                            <SelectItem value="Pending">Pending</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    {/* Stage Filter */}
+                    <Select
+                        value={stageFilter || "all"}
+                        onValueChange={(val) => setStageFilter(val === "all" ? null : val)}
+                    >
+                        <SelectTrigger className="w-full sm:flex-1 md:w-[180px] h-9">
+                            <SelectValue placeholder="All Stages" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Stages</SelectItem>
+                            {uniqueStages.map(stage => (
+                                <SelectItem key={stage} value={stage}>{stage}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {/* Export Button */}
                 <Button
                     variant="outline"
+                    size="sm"
                     onClick={handleExportCSV}
-                    className="w-full md:w-auto gap-2"
+                    className="w-full sm:w-auto gap-2 h-9"
                 >
                     <Download className="w-4 h-4" />
-                    Export CSV
+                    <span className="hidden sm:inline">Export CSV</span>
+                    <span className="sm:hidden">Export</span>
                 </Button>
             </div>
 
             {/* Table */}
             <div className="flex-1 overflow-auto">
-                <Table>
-                    <TableHeader className="bg-gradient-to-r from-blue-50 via-indigo-50/40 to-blue-50 sticky top-0 z-10 shadow-sm border-b-2">
-                        <TableRow className="hover:bg-gray-50/50">
-                            <TableHead className="w-[50px] font-semibold text-gray-700">Actions</TableHead>
-                            <TableHead className="w-[200px] font-semibold text-gray-700">Village</TableHead>
-                            <TableHead className="w-[120px] font-semibold text-gray-700">Status</TableHead>
-                            <TableHead className="w-[100px] font-semibold text-gray-700">%</TableHead>
-                            {/* Dynamic Columns */}
-                            {itemColumns.map((col, idx) => (
-                                <TableHead key={idx} className="min-w-[200px] font-semibold text-gray-700">
-                                    <div className="truncate max-w-[180px]" title={col}>
-                                        {col}
-                                    </div>
-                                </TableHead>
-                            ))}
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {paginatedVillages.map((v, i) => {
-                            const percent = complianceType === '9(2)' ? v.sec92_percent : v.sec13_percent;
-                            const status = complianceType === '9(2)' ? v.sec92_status : v.sec13_status;
-                            const items = complianceType === '9(2)' ? v.sec92_items : v.sec13_items;
-
-                            return (
-                                <TableRow key={v.id + i} className="hover:bg-muted/30 transition-colors">
-                                    <TableCell>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => openModal(v)}
-                                            title="View Details"
-                                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                        >
-                                            <Eye className="w-4 h-4" />
-                                        </Button>
-                                    </TableCell>
-                                    <TableCell className="font-medium">
-                                        <div>
-                                            {v.name}
-                                            <div className="text-xs text-muted-foreground font-normal">{v.districtName}</div>
+                <div className="min-w-[1200px]">
+                    <Table>
+                        <TableHeader className="bg-gradient-to-r from-blue-50 via-indigo-50/40 to-blue-50 sticky top-0 z-10 shadow-sm border-b-2">
+                            <TableRow className="hover:bg-gray-50/50">
+                                <TableHead className="w-[50px] font-semibold text-gray-700">Actions</TableHead>
+                                <TableHead className="w-[200px] font-semibold text-gray-700">Village</TableHead>
+                                <TableHead className="w-[120px] font-semibold text-gray-700">Stage</TableHead>
+                                <TableHead className="w-[150px] font-semibold text-gray-700">Head Surveyor</TableHead>
+                                <TableHead className="w-[120px] font-semibold text-gray-700">Status</TableHead>
+                                <TableHead className="w-[100px] font-semibold text-gray-700">%</TableHead>
+                                <TableHead className="w-[120px] font-semibold text-gray-700">Overall %</TableHead>
+                                {/* Dynamic Columns */}
+                                {itemColumns.map((col, idx) => (
+                                    <TableHead key={idx} className="min-w-[200px] font-semibold text-gray-700">
+                                        <div className="truncate max-w-[180px]" title={col}>
+                                            {col}
                                         </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge
-                                            variant="outline"
-                                            className={cn("font-medium", getStatusBadge(percent))}
-                                        >
-                                            {status}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="font-medium font-mono">
-                                        {formatPercent(percent)}
-                                    </TableCell>
-                                    {items.map((item, idx) => (
-                                        <TableCell key={idx}>
-                                            <div className="flex items-center gap-2">
-                                                <div className={cn(
-                                                    "w-2 h-2 rounded-full shrink-0",
-                                                    item.status === 'Completed' ? "bg-green-500" : "bg-red-400"
-                                                )} />
-                                                <span className="text-xs text-muted-foreground truncate max-w-[150px]" title={String(item.raw)}>
-                                                    {formatValue(item.value, item.raw)}
-                                                </span>
+                                    </TableHead>
+                                ))}
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {paginatedVillages.map((v, i) => {
+                                const percent = complianceType === '9(2)' ? v.sec92_percent : v.sec13_percent;
+                                const status = complianceType === '9(2)' ? v.sec92_status : v.sec13_status;
+                                const items = complianceType === '9(2)' ? v.sec92_items : v.sec13_items;
+
+                                return (
+                                    <TableRow key={v.id + i} className="hover:bg-muted/30 transition-colors">
+                                        <TableCell>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => openModal(v)}
+                                                title="View Details"
+                                                className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                            </Button>
+                                        </TableCell>
+                                        <TableCell className="font-medium">
+                                            <div>
+                                                {v.name}
+                                                <div className="text-xs text-muted-foreground font-normal">{v.districtName}</div>
                                             </div>
                                         </TableCell>
-                                    ))}
+                                        <TableCell>
+                                            <Badge
+                                                variant="outline"
+                                                className={cn(
+                                                    "font-medium",
+                                                    v.stage.toLowerCase().includes('13 published')
+                                                        ? 'bg-green-100 text-green-700 border-green-300'
+                                                        : v.stage.toLowerCase().includes('9(2)')
+                                                            ? 'bg-blue-100 text-blue-700 border-blue-300'
+                                                            : v.stage.toLowerCase().includes('above 90%')
+                                                                ? 'bg-amber-100 text-amber-700 border-amber-300'
+                                                                : 'bg-gray-100 text-gray-700 border-gray-300'
+                                                )}
+                                            >
+                                                {v.stage}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="text-sm text-gray-700">
+                                                {v.headSurveyor}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge
+                                                variant="outline"
+                                                className={cn("font-medium", getStatusBadge(percent))}
+                                            >
+                                                {status}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="font-medium font-mono">
+                                            {formatPercent(percent)}
+                                        </TableCell>
+                                        <TableCell className="font-medium font-mono">
+                                            <Badge
+                                                variant="outline"
+                                                className={cn("font-semibold", getStatusBadge(v.overall_percent))}
+                                            >
+                                                {formatPercent(v.overall_percent)}
+                                            </Badge>
+                                        </TableCell>
+                                        {items.map((item, idx) => (
+                                            <TableCell key={idx}>
+                                                <div className="flex items-center gap-2">
+                                                    <div className={cn(
+                                                        "w-2 h-2 rounded-full shrink-0",
+                                                        item.status === 'Completed' ? "bg-green-500" : "bg-red-400"
+                                                    )} />
+                                                    <span className="text-xs text-muted-foreground truncate max-w-[150px]" title={String(item.raw)}>
+                                                        {formatValue(item.value, item.raw)}
+                                                    </span>
+                                                </div>
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                )
+                            })}
+                            {paginatedVillages.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={7 + itemColumns.length} className="h-24 text-center text-muted-foreground">
+                                        No villages found matching your filters.
+                                    </TableCell>
                                 </TableRow>
-                            )
-                        })}
-                        {paginatedVillages.length === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={4 + itemColumns.length} className="h-24 text-center text-muted-foreground">
-                                    No villages found matching your filters.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
             </div>
 
             {/* Pagination */}
-            <div className="p-4 border-t flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
-                    Showing {Math.min(villages.length, (page - 1) * pageSize + 1)} to {Math.min(villages.length, page * pageSize)} of {villages.length} villages
+            <div className="p-3 sm:p-4 border-t flex flex-col-reverse sm:flex-row items-center justify-between gap-3">
+                <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
+                    <span className="hidden sm:inline">
+                        Showing {Math.min(villages.length, (page - 1) * pageSize + 1)} to {Math.min(villages.length, page * pageSize)} of {villages.length} villages
+                    </span>
+                    <span className="sm:hidden">
+                        {Math.min(villages.length, (page - 1) * pageSize + 1)}-{Math.min(villages.length, page * pageSize)} of {villages.length}
+                    </span>
                 </div>
                 <div className="flex gap-2">
                     <Button
@@ -269,18 +342,22 @@ export const VillageTable = () => {
                         size="sm"
                         disabled={page === 1}
                         onClick={() => setPage(p => p - 1)}
+                        className="h-9 min-w-[80px] sm:min-w-[100px]"
                     >
-                        <ChevronLeft className="h-4 w-4 mr-2" />
-                        Previous
+                        <ChevronLeft className="h-4 w-4 mr-1 sm:mr-2" />
+                        <span className="hidden sm:inline">Previous</span>
+                        <span className="sm:hidden">Prev</span>
                     </Button>
                     <Button
                         variant="outline"
                         size="sm"
                         disabled={page === totalPages}
                         onClick={() => setPage(p => p + 1)}
+                        className="h-9 min-w-[80px] sm:min-w-[100px]"
                     >
-                        Next
-                        <ChevronRight className="h-4 w-4 ml-2" />
+                        <span className="hidden sm:inline">Next</span>
+                        <span className="sm:hidden">Next</span>
+                        <ChevronRight className="h-4 w-4 ml-1 sm:ml-2" />
                     </Button>
                 </div>
             </div>

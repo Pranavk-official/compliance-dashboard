@@ -23,48 +23,46 @@ import {
 const DashboardSkeleton = () => {
     return (
         <div className="min-h-screen bg-gray-50/50 flex flex-col">
-            {/* Header Skeleton */}
-            <header className="bg-background border-b border-border px-6 py-4 flex items-center justify-between shadow-sm sticky top-0 z-20">
-                <div className="flex items-center gap-3">
-                    <Skeleton className="h-10 w-10 rounded-lg" />
+            {/* Header Skeleton - Responsive */}
+            <header className="bg-background border-b border-border px-3 sm:px-4 md:px-6 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-3 shadow-sm sticky top-0 z-20">
+                <div className="flex items-center gap-2 sm:gap-3">
+                    <Skeleton className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl" />
                     <div>
-                        <Skeleton className="h-6 w-48 mb-2" />
-                        <Skeleton className="h-3 w-32" />
+                        <Skeleton className="h-5 sm:h-6 w-32 sm:w-48 mb-1 sm:mb-2" />
+                        <Skeleton className="h-2 sm:h-3 w-24 sm:w-32 hidden xs:block" />
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    <Skeleton className="h-9 w-24 rounded-lg" />
-                    <Skeleton className="h-9 w-32 rounded-lg" />
-                    <Skeleton className="h-9 w-32 rounded-lg" />
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                    <Skeleton className="h-8 sm:h-9 w-20 sm:w-24 rounded-lg" />
+                    <Skeleton className="h-8 sm:h-9 w-24 sm:w-32 rounded-lg" />
+                    <Skeleton className="h-8 sm:h-9 w-24 sm:w-32 rounded-lg" />
                 </div>
             </header>
 
-            {/* Sub-Header Skeleton */}
-            <div className="bg-background border-b border-border px-6 py-3 flex items-center gap-6 sticky top-[73px] z-10">
-                <div className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-16" />
-                    <Skeleton className="h-10 w-[180px] rounded-md" />
+            {/* Sub-Header Skeleton - Responsive */}
+            <div className="bg-background border-b border-border px-3 sm:px-4 md:px-6 py-2 sm:py-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 md:gap-6 sticky z-10" style={{ top: 'calc(60px + env(safe-area-inset-top))' }}>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                    <Skeleton className="h-4 sm:h-5 w-12 sm:w-16" />
+                    <Skeleton className="h-9 sm:h-10 w-full sm:w-[180px] rounded-md" />
                 </div>
-                <div className="bg-muted p-1 rounded-lg flex items-center">
-                    <Skeleton className="h-9 w-[200px] rounded-md" />
+                <div className="bg-muted p-1 rounded-lg flex items-center w-full sm:w-auto">
+                    <Skeleton className="h-9 w-full sm:w-[200px] rounded-md" />
                 </div>
             </div>
 
-            {/* Main Content Skeleton */}
-            <main className="flex-1 p-6 overflow-auto">
-                <div className="max-w-7xl mx-auto space-y-6">
-                    {/* KPI Grid Skeleton */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {[1, 2, 3, 4].map((i) => (
-                            <Skeleton key={i} className="h-32 rounded-xl" />
+            {/* Main Content Skeleton - Responsive */}
+            <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto">
+                <div className="max-w-7xl mx-auto space-y-4 sm:space-y-5 md:space-y-6">
+                    {/* KPI Grid Skeleton - Progressive 1-5 columns */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-5 md:gap-6">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                            <Skeleton key={i} className="h-[120px] sm:h-32 rounded-xl" />
                         ))}
                     </div>
-                    {/* Chart/Table Skeleton */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <Skeleton className="lg:col-span-2 h-[400px] rounded-xl" />
-                        <Skeleton className="h-[400px] rounded-xl" />
-                    </div>
-                    <Skeleton className="h-[300px] rounded-xl" />
+                    {/* Chart Skeleton - Responsive height */}
+                    <Skeleton className="min-h-[250px] h-[35vh] sm:min-h-[300px] sm:h-[40vh] md:min-h-[350px] md:h-[45vh] max-h-[400px] sm:max-h-[500px] md:max-h-[600px] rounded-xl" />
+                    {/* Table Skeleton - Responsive height */}
+                    <Skeleton className="min-h-[500px] h-[700px] sm:h-[750px] md:h-[700px] max-h-[80vh] rounded-xl" />
                 </div>
             </main>
         </div>
@@ -260,67 +258,71 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 flex flex-col">
             {/* Header */}
-            <header className="bg-gradient-to-r from-white via-blue-50/30 to-white border-b-2 border-blue-100/50 px-6 py-4 flex items-center justify-between shadow-md sticky top-0 z-20 backdrop-blur-sm bg-white/80">
-                <div className="flex items-center gap-3">
-                    <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-2.5 rounded-xl shadow-lg">
-                        <LayoutDashboard className="text-white w-6 h-6" />
+            <header className="bg-gradient-to-r from-white via-blue-50/30 to-white border-b-2 border-blue-100/50 px-3 sm:px-4 md:px-6 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-3 shadow-md sticky top-0 z-20 backdrop-blur-sm bg-white/80" style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}>
+                <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-2 sm:p-2.5 rounded-lg sm:rounded-xl shadow-lg">
+                        <LayoutDashboard className="text-white w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold bg-gradient-to-r from-blue-900 to-indigo-900 bg-clip-text text-transparent leading-none">Compliance Dashboard</h1>
-                        <p className="text-xs text-muted-foreground mt-1">Government of Kerala</p>
+                        <h1 className="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-r from-blue-900 to-indigo-900 bg-clip-text text-transparent leading-none">Compliance Dashboard</h1>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 hidden xs:block">Government of Kerala</p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                     {/* Refresh Button (Only for Google Sheets) */}
                     {currentSheetUrl && (
                         <Button
                             variant="ghost"
+                            size="sm"
                             onClick={handleRefresh}
                             disabled={isLoading}
-                            className="gap-2"
+                            className="gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9"
                             title="Refresh Data from Google Sheet"
                         >
-                            <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
-                            Refresh Data
+                            <RefreshCw className={cn("w-3 h-3 sm:w-4 sm:h-4", isLoading && "animate-spin")} />
+                            <span className="hidden sm:inline">Refresh Data</span>
                         </Button>
                     )}
 
-                    <div className="h-6 w-px bg-border mx-1"></div>
+                    <div className="h-4 sm:h-6 w-px bg-border hidden sm:block"></div>
 
                     <Button
                         variant="outline"
+                        size="sm"
                         onClick={handleExportSummary}
-                        className="gap-2"
+                        className="gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9"
                     >
-                        <Download className="w-4 h-4" />
-                        Export Summary
+                        <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="hidden md:inline">Export Summary</span>
+                        <span className="md:hidden">Export</span>
                     </Button>
 
                     <Button
                         variant="destructive"
                         size="sm"
                         onClick={handleChangeSource}
-                        className="gap-2 ml-2"
+                        className="gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9"
                         title="Change Data Source"
                     >
-                        <LogOut className="w-4 h-4" />
-                        Change Source
+                        <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="hidden md:inline">Change Source</span>
+                        <span className="md:hidden">Change</span>
                     </Button>
                 </div>
             </header>
 
             {/* Sub-Header / Controls */}
             {districts.length > 0 && (
-                <div className="bg-background border-b border-border px-6 py-3 flex items-center gap-6 overflow-x-auto sticky top-[73px] z-10">
+                <div className="bg-background border-b border-border px-3 sm:px-4 md:px-6 py-2 sm:py-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 md:gap-6 overflow-x-auto sticky z-10" style={{ top: 'calc(60px + env(safe-area-inset-top))' }}>
                     {/* District Selector */}
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-muted-foreground">District:</span>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                        <span className="text-xs sm:text-sm font-medium text-muted-foreground">District:</span>
                         <Select
                             value={selectedDistrict || "all"}
                             onValueChange={(val) => setSelectedDistrict(val === "all" ? null : val)}
                         >
-                            <SelectTrigger className="w-[180px]">
+                            <SelectTrigger className="w-full sm:w-[180px] h-9">
                                 <SelectValue placeholder="All Districts" />
                             </SelectTrigger>
                             <SelectContent>
@@ -333,11 +335,11 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
                     </div>
 
                     {/* Section Toggle */}
-                    <div className="bg-muted p-1 rounded-lg flex items-center">
-                        <Tabs value={complianceType} onValueChange={(val) => setComplianceType(val as any)}>
-                            <TabsList className="grid w-[200px] grid-cols-2">
-                                <TabsTrigger value="9(2)">Section 9(2)</TabsTrigger>
-                                <TabsTrigger value="13">Section 13</TabsTrigger>
+                    <div className="bg-muted p-1 rounded-lg flex items-center w-full sm:w-auto">
+                        <Tabs value={complianceType} onValueChange={(val) => setComplianceType(val as any)} className="w-full">
+                            <TabsList className="grid w-full sm:w-[200px] grid-cols-2 h-9">
+                                <TabsTrigger value="9(2)" className="text-xs sm:text-sm">Section 9(2)</TabsTrigger>
+                                <TabsTrigger value="13" className="text-xs sm:text-sm">Section 13</TabsTrigger>
                             </TabsList>
                         </Tabs>
                     </div>
@@ -345,8 +347,8 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
             )}
 
             {/* Main Content */}
-            <main className="flex-1 p-6 overflow-auto">
-                <div className="max-w-7xl mx-auto space-y-6">
+            <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto">
+                <div className="max-w-7xl mx-auto space-y-4 sm:space-y-5 md:space-y-6">
                     {children}
                 </div>
             </main>

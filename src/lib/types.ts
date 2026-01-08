@@ -11,6 +11,14 @@ export interface Village {
     id: string; // Combined Code + Name or just Name
     name: string;
     district: string;
+    headSurveyor: string; // Name of the head surveyor for this village
+    governmentSurveyor: string; // Name of the government surveyor
+    assistantDirector: string; // Name of the assistant director
+    superintendent: string; // Name of the superintendent
+    stage: string; // Current stage of the village
+    publishedDate: string | null; // 9(2) Published Date (only if stage is 9(2) Published)
+    daysPassedAfter92: number | null; // Number of days passed after 9(2) publication
+    isCritical: boolean; // True if days >= 90 and stage is 9(2) Published
 
     // Section 9(2)
     sec92_items: ComplianceItem[];
@@ -28,7 +36,7 @@ export interface Village {
     // "District 9(2) % = average of village completion". "Village completion" likely means the Village's average % across items.
 
     // We will store Average % for the village across all items.
-    sec92_status: 'Completed' | 'Pending'; // All items must be >= 75%
+    sec92_status: 'Completed' | 'Pending'; // All items must be >= 90%
 
     // Section 13
     sec13_items: ComplianceItem[];
@@ -36,6 +44,10 @@ export interface Village {
     sec13_total_count: number;
     sec13_percent: number;
     sec13_status: 'Completed' | 'Pending';
+
+    // Overall Compliance
+    overall_percent: number; // Average of sec92_percent and sec13_percent
+    overall_status: 'Completed' | 'Pending';
 }
 
 export interface District {

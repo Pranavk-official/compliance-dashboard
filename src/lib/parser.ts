@@ -96,19 +96,25 @@ export const parseExcel = async (file: File): Promise<District[]> => {
     const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: 'array' });
 
-    // Ignore Sheet 0 (Guideline)
+    // Ignore Sheet 0 (Guideline) and 'test' sheet
     // Process all other sheets
     const districts: District[] = [];
 
     // Skip first sheet (index 0)
     for (let i = 1; i < workbook.SheetNames.length; i++) {
         const sheetName = workbook.SheetNames[i];
+
+        // Skip 'test' sheet (case-insensitive)
+        if (sheetName.toLowerCase() === 'test') {
+            continue;
+        }
+
         const sheet = workbook.Sheets[sheetName];
         const data = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[][]; // Array of Arrays
 
         // Locate Village Row. Based on deep inspection, it's Row 53 (Index 53).
         // Let's try to dynamic find "Village" in Col 2 just in case.
-        let villageRowIndex = 53;
+        let villageRowIndex = 55; // Updated from 53 based on latest inspection
         let dataStartCol = 3;
 
         // Simple scan for "Village" in the first 100 rows, col 2
@@ -122,24 +128,80 @@ export const parseExcel = async (file: File): Promise<District[]> => {
 
         if (!villageRow) continue;
 
+        // Extract stage from row 1 (first data column)
+        const stageRow = data[1];
+        const stage = stageRow && stageRow[3] ? String(stageRow[3]).trim() : 'Unknown';
+
         // Iterate Columns starting from dataStartCol
         for (let col = dataStartCol; col < villageRow.length; col++) {
             const villageName = villageRow[col];
             if (!villageName || typeof villageName !== 'string' || villageName === '#REF!') continue; // Skip empty columns or reference errors
 
+            // Extract stage for this village (each village has its own stage)
+            const villageStageRow = data[1];
+            const villageStage = villageStageRow && villageStageRow[col]
+                ? String(villageStageRow[col]).trim()
+                : 'Unknown';
 
-            // Extract 9(2) Items
+            // Extract 9(2) Published Date from row 2
+            const publishedDateRow = data[2];
+            let publishedDate: string | null = null;
+            let daysPassedAfter92: number | null = null;
+            let isCritical = false;
+
+            // Only extract date if stage includes "9(2) Published"
+            if (villageStage.toLowerCase().includes('9(2)') && villageStage.toLowerCase().includes('published')) {
+                const dateValue = publishedDateRow && publishedDateRow[col];
+                if (dateValue && typeof dateValue === 'number') {
+                    // Convert Excel serial date to JavaScript Date
+                    const excelEpoch = new Date(1899, 11, 30);
+                    const date = new Date(excelEpoch.getTime() + dateValue * 86400000);
+                    publishedDate = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+                }
+
+                // Extract days passed from row 3
+                const daysPassedRow = data[3];
+                const daysValue = daysPassedRow && daysPassedRow[col];
+                if (daysValue && typeof daysValue === 'number') {
+                    daysPassedAfter92 = daysValue;
+                    // Mark as critical if >= 90 days
+                    isCritical = daysValue >= 90;
+                }
+            }
+
+            // Extract metadata from various rows (Row 4 is Village, so adjust indices)
+            const headSurveyorRow = data[7]; // Row 7: Head Surveyor
+            const headSurveyor = headSurveyorRow && headSurveyorRow[col]
+                ? String(headSurveyorRow[col]).trim()
+                : 'Not Assigned';
+
+            const govSurveyorRow = data[8]; // Row 8: Government Surveyor
+            const governmentSurveyor = govSurveyorRow && govSurveyorRow[col]
+                ? String(govSurveyorRow[col]).trim()
+                : 'Not Assigned';
+
+            const adRow = data[5]; // Row 5: Assistant Director
+            const assistantDirector = adRow && adRow[col]
+                ? String(adRow[col]).trim()
+                : 'Not Assigned';
+
+            const superintendentRow = data[6]; // Row 6: Superintendent
+            const superintendent = superintendentRow && superintendentRow[col]
+                ? String(superintendentRow[col]).trim()
+                : 'Not Assigned';
+
+            // Extract 9(2) Items - First 13 items only (rows 61-73)
             const sec92_items: ComplianceItem[] = [];
-            for (let r = 59; r <= 72; r++) {
+            for (let r = 61; r <= 73; r++) {
                 if (!data[r]) continue;
                 const name = data[r][2]; // Label in Col 2
                 const val = data[r][col];
                 sec92_items.push(normalizeItem(`9(2)-${r}`, name, val));
             }
 
-            // Extract 13 Items
+            // Extract 13 Items (rows 77-89)
             const sec13_items: ComplianceItem[] = [];
-            for (let r = 75; r <= 87; r++) {
+            for (let r = 77; r <= 89; r++) {
                 if (!data[r]) continue;
                 const name = data[r][2];
                 const val = data[r][col];
@@ -149,16 +211,37 @@ export const parseExcel = async (file: File): Promise<District[]> => {
             // Calculate Stats
             const sec92_completed = sec92_items.filter(i => i.status === 'Completed').length;
             const sec92_percent = sec92_items.reduce((sum, item) => sum + item.value, 0) / sec92_items.length;
-            const sec92_status = sec92_completed === sec92_items.length ? 'Completed' : 'Pending';
+
+            // Status based on stage, not compliance percentage
+            const stageLower = stage.toLowerCase();
+            const sec92_status: 'Completed' | 'Pending' = stageLower.includes('13 published')
+                ? 'Completed'
+                : 'Pending';
 
             const sec13_completed = sec13_items.filter(i => i.status === 'Completed').length;
             const sec13_percent = sec13_items.reduce((sum, item) => sum + item.value, 0) / sec13_items.length;
-            const sec13_status = sec13_completed === sec13_items.length ? 'Completed' : 'Pending';
+            const sec13_status: 'Completed' | 'Pending' = stageLower.includes('13 published')
+                ? 'Completed'
+                : 'Pending';
+
+            // Calculate Overall Compliance
+            const overall_percent = (sec92_percent + sec13_percent) / 2;
+            const overall_status: 'Completed' | 'Pending' = stageLower.includes('13 published')
+                ? 'Completed'
+                : 'Pending';
 
             villages.push({
                 id: `${villageName}-${col}`,
                 name: String(villageName),
                 district: sheetName,
+                headSurveyor,
+                governmentSurveyor,
+                assistantDirector,
+                superintendent,
+                stage: villageStage,
+                publishedDate,
+                daysPassedAfter92,
+                isCritical,
                 sec92_items,
                 sec92_completed_count: sec92_completed,
                 sec92_total_count: sec92_items.length,
@@ -168,7 +251,9 @@ export const parseExcel = async (file: File): Promise<District[]> => {
                 sec13_completed_count: sec13_completed,
                 sec13_total_count: sec13_items.length,
                 sec13_percent,
-                sec13_status
+                sec13_status,
+                overall_percent,
+                overall_status
             });
         }
 
@@ -200,8 +285,8 @@ function normalizeItem(id: string, name: string, value: any): ComplianceItem {
         if (numVal > 1) numVal = 1;
         if (numVal < 0) numVal = 0;
 
-        // Rule: >= 75% (.75) is Completed
-        if (numVal >= 0.75) status = 'Completed';
+        // Rule: >= 90% (.90) is Completed
+        if (numVal >= 0.90) status = 'Completed';
     } else if (typeof value === 'string') {
         const lower = value.toLowerCase().trim();
         if (lower === 'yes' || lower === 'completed' || lower === 'ready') {

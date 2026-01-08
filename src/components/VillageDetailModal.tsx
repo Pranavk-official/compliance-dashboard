@@ -42,12 +42,36 @@ export const VillageDetailModal = ({
                 <DialogHeader className="px-6 pt-6 pb-4 bg-gradient-to-r from-blue-50 via-indigo-50/40 to-blue-50 border-b-2 rounded-t-lg border-blue-100 shrink-0">
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
-                            <DialogTitle className="text-2xl font-bold text-gray-900 mb-2">
+                            <DialogTitle className="text-2xl font-bold text-gray-900 mb-3">
                                 {village.name}
                             </DialogTitle>
-                            <DialogDescription className="flex items-center gap-2 text-base">
-                                <MapPin className="w-4 h-4" />
-                                <span className="font-medium text-gray-700">{districtName}</span>
+                            <DialogDescription className="space-y-2">
+                                <div className="flex items-center gap-2 text-base">
+                                    <MapPin className="w-4 h-4" />
+                                    <span className="font-medium text-gray-700">{districtName}</span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                                    <div className="flex items-center gap-2 text-gray-600">
+                                        <span className="font-medium">Stage:</span>
+                                        <span className="font-semibold text-blue-700">{village.stage}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-gray-600">
+                                        <span className="font-medium">Head Surveyor:</span>
+                                        <span className="font-semibold text-blue-700">{village.headSurveyor}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-gray-600">
+                                        <span className="font-medium">Gov. Surveyor:</span>
+                                        <span className="font-semibold text-blue-700">{village.governmentSurveyor}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-gray-600">
+                                        <span className="font-medium">AD:</span>
+                                        <span className="font-semibold text-blue-700">{village.assistantDirector}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-gray-600 sm:col-span-2">
+                                        <span className="font-medium">Superintendent:</span>
+                                        <span className="font-semibold text-blue-700">{village.superintendent}</span>
+                                    </div>
+                                </div>
                             </DialogDescription>
                         </div>
                         <Badge
@@ -64,27 +88,34 @@ export const VillageDetailModal = ({
 
                 {/* Stats Overview */}
                 <div className="px-6 py-4 bg-white border-b shrink-0">
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="flex flex-col items-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                        <div className="flex flex-col items-center p-3 sm:p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border border-purple-100">
+                            <TrendingUp className="w-5 h-5 text-purple-600 mb-2" />
+                            <div className="text-xl sm:text-2xl font-bold text-gray-900">
+                                {formatPercent(village.overall_percent)}
+                            </div>
+                            <div className="text-xs text-gray-600 mt-1 text-center">Overall</div>
+                        </div>
+                        <div className="flex flex-col items-center p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
                             <TrendingUp className="w-5 h-5 text-blue-600 mb-2" />
-                            <div className="text-2xl font-bold text-gray-900">
+                            <div className="text-xl sm:text-2xl font-bold text-gray-900">
                                 {formatPercent(percent)}
                             </div>
-                            <div className="text-xs text-gray-600 mt-1">Overall Completion</div>
+                            <div className="text-xs text-gray-600 mt-1 text-center">{complianceType}</div>
                         </div>
-                        <div className="flex flex-col items-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-100">
+                        <div className="flex flex-col items-center p-3 sm:p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-100">
                             <CheckCircle2 className="w-5 h-5 text-green-600 mb-2" />
-                            <div className="text-2xl font-bold text-gray-900">
+                            <div className="text-xl sm:text-2xl font-bold text-gray-900">
                                 {completedCount}
                             </div>
-                            <div className="text-xs text-gray-600 mt-1">Completed</div>
+                            <div className="text-xs text-gray-600 mt-1 text-center">Completed</div>
                         </div>
-                        <div className="flex flex-col items-center p-4 bg-gradient-to-br from-gray-50 to-slate-50 rounded-lg border border-gray-200">
+                        <div className="flex flex-col items-center p-3 sm:p-4 bg-gradient-to-br from-gray-50 to-slate-50 rounded-lg border border-gray-200">
                             <XCircle className="w-5 h-5 text-gray-600 mb-2" />
-                            <div className="text-2xl font-bold text-gray-900">
+                            <div className="text-xl sm:text-2xl font-bold text-gray-900">
                                 {totalCount - completedCount}
                             </div>
-                            <div className="text-xs text-gray-600 mt-1">Pending</div>
+                            <div className="text-xs text-gray-600 mt-1 text-center">Pending</div>
                         </div>
                     </div>
                 </div>
