@@ -1,11 +1,12 @@
 import { useStore } from '../lib/store';
 import { getStatusBadge, formatPercent, formatValue, cn } from '../lib/utils';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Download, Search, Filter, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { VillageDetailModal } from './VillageDetailModal';
 import type { Village } from '../lib/types';
+import { PAGINATION, EXCEL_EXPORT } from '../lib/constants';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -50,53 +51,60 @@ export const VillageTable = () => {
         setIsModalOpen(true);
     };
 
-    // Flatten villages
-    let activeDistricts = selectedDistrict
-        ? districts.filter(d => d.name === selectedDistrict)
-        : districts;
+    // Memoize filtered villages for performance
+    const { filteredVillages, uniqueStages } = useMemo(() => {
+        // Flatten villages
+        const activeDistricts = selectedDistrict
+            ? districts.filter(d => d.name === selectedDistrict)
+            : districts;
 
-    let villages = activeDistricts.flatMap(d => d.villages.map(v => ({ ...v, districtName: d.name })));
+        let villages = activeDistricts.flatMap(d => d.villages.map(v => ({ ...v, districtName: d.name })));
 
-    // Apply filters
-    if (statusFilter !== 'All') {
-        villages = villages.filter(v => {
-            const status = complianceType === '9(2)' ? v.sec92_status : v.sec13_status;
-            return status === statusFilter;
-        });
-    }
+        // Apply filters
+        if (statusFilter !== 'All') {
+            villages = villages.filter(v => {
+                const status = complianceType === '9(2)' ? v.sec92_status : v.sec13_status;
+                return status === statusFilter;
+            });
+        }
 
-    if (stageFilter) {
-        villages = villages.filter(v => v.stage === stageFilter);
-    }
+        if (stageFilter) {
+            villages = villages.filter(v => v.stage === stageFilter);
+        }
 
-    if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        villages = villages.filter(v =>
-            v.name.toLowerCase().includes(q) ||
-            v.districtName.toLowerCase().includes(q)
-        );
-    }
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            villages = villages.filter(v =>
+                v.name.toLowerCase().includes(q) ||
+                v.districtName.toLowerCase().includes(q)
+            );
+        }
 
-    // Get unique stages for filter
-    const uniqueStages = Array.from(new Set(activeDistricts.flatMap(d => d.villages.map(v => v.stage))));
-    uniqueStages.sort();
+        // Get unique stages for filter
+        const uniqueStages = Array.from(new Set(activeDistricts.flatMap(d => d.villages.map(v => v.stage))));
+        uniqueStages.sort();
 
-    // Pagination (Simple)
+        return { filteredVillages: villages, uniqueStages };
+    }, [districts, selectedDistrict, complianceType, statusFilter, stageFilter, searchQuery]);
+
+    // Pagination
     const [page, setPage] = useState(1);
-    const pageSize = 50;
-    const totalPages = Math.ceil(villages.length / pageSize);
-    const paginatedVillages = villages.slice((page - 1) * pageSize, page * pageSize);
+    const pageSize = PAGINATION.DEFAULT_PAGE_SIZE;
+    const totalPages = Math.ceil(filteredVillages.length / pageSize);
+    const paginatedVillages = filteredVillages.slice((page - 1) * pageSize, page * pageSize);
 
-    // Dynamic Columns
-    const sampleVillage = villages[0];
-    const itemColumns = sampleVillage
-        ? (complianceType === '9(2)' ? sampleVillage.sec92_items : sampleVillage.sec13_items).map(i => i.name)
-        : [];
+    // Dynamic Columns - memoized
+    const itemColumns = useMemo(() => {
+        const sampleVillage = filteredVillages[0];
+        return sampleVillage
+            ? (complianceType === '9(2)' ? sampleVillage.sec92_items : sampleVillage.sec13_items).map(i => i.name)
+            : [];
+    }, [filteredVillages, complianceType]);
 
     const handleExportCSV = () => {
-        const exportData = villages.map(v => {
+        const exportData = filteredVillages.map(v => {
             const items = complianceType === '9(2)' ? v.sec92_items : v.sec13_items;
-            const itemObj: any = {};
+            const itemObj: Record<string, string> = {};
             items.forEach((item, idx) => {
                 itemObj[`Item ${idx + 1}: ${item.name} `] = formatValue(item.value, item.raw);
             });
@@ -118,8 +126,8 @@ export const VillageTable = () => {
 
         const ws = XLSX.utils.json_to_sheet(exportData);
         const csv = XLSX.utils.sheet_to_csv(ws);
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        saveAs(blob, `compliance_${complianceType.replace(/[()]/g, '')}_${new Date().toISOString().split('T')[0]}.csv`);
+        const blob = new Blob([csv], { type: EXCEL_EXPORT.MIME_TYPE });
+        saveAs(blob, `${EXCEL_EXPORT.DEFAULT_FILENAME_PREFIX}_${complianceType.replace(/[()]/g, '')}_${new Date().toISOString().split('T')[0]}.csv`);
     };
 
     return (
@@ -151,7 +159,7 @@ export const VillageTable = () => {
                     {/* District Filter */}
                     <Select
                         value={selectedDistrict || "all"}
-                        onValueChange={(val) => setSelectedDistrict(val === "all" ? null : val)}
+                        onValueChange={(value: string) => setSelectedDistrict(value === "all" ? null : value)}
                     >
                         <SelectTrigger className="w-full sm:flex-1 md:w-[180px] h-9">
                             <SelectValue placeholder="All Districts" />
@@ -167,7 +175,7 @@ export const VillageTable = () => {
                     {/* Status Filter */}
                     <Select
                         value={statusFilter}
-                        onValueChange={(val) => setStatusFilter(val as any)}
+                        onValueChange={(value: string) => setStatusFilter(value as 'All' | 'Completed' | 'Pending')}
                     >
                         <SelectTrigger className="w-full sm:flex-1 md:w-[150px] h-9">
                             <SelectValue placeholder="Status" />
@@ -330,10 +338,10 @@ export const VillageTable = () => {
             <div className="p-3 sm:p-4 border-t flex flex-col-reverse sm:flex-row items-center justify-between gap-3">
                 <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
                     <span className="hidden sm:inline">
-                        Showing {Math.min(villages.length, (page - 1) * pageSize + 1)} to {Math.min(villages.length, page * pageSize)} of {villages.length} villages
+                        Showing {Math.min(filteredVillages.length, (page - 1) * pageSize + 1)} to {Math.min(filteredVillages.length, page * pageSize)} of {filteredVillages.length} villages
                     </span>
                     <span className="sm:hidden">
-                        {Math.min(villages.length, (page - 1) * pageSize + 1)}-{Math.min(villages.length, page * pageSize)} of {villages.length}
+                        {Math.min(filteredVillages.length, (page - 1) * pageSize + 1)}-{Math.min(filteredVillages.length, page * pageSize)} of {filteredVillages.length}
                     </span>
                 </div>
                 <div className="flex gap-2">

@@ -1,73 +1,67 @@
-# React + TypeScript + Vite
+# Compliance Dashboard - Government of Kerala
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, responsive dashboard for tracking survey compliance status across districts and villages.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Data Visualization**: Interactive charts and KPI grids to visualize compliance progress.
+- **Detailed Reporting**: Comprehensive village-level reports with filtering and search capabilities.
+- **Excel/Google Sheets Integration**: Seamlessly load data from local Excel files or Google Sheets.
+- **Responsive Design**: Optimized for all devices, from desktops to mobile phones.
+- **Performance Optimized**: Efficient data processing and memoized components for smooth user experience.
+- **Modern UI**: Built with Shadcn UI, Tailwind CSS, and Lucide Icons.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Frontend**: React, TypeScript, Vite
+- **Styling**: Tailwind CSS, Shadcn UI
+- **State Management**: Zustand
+- **Data Parsing**: XLSX (SheetJS)
+- **Charts**: Recharts
+- **Icons**: Lucide React
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/Pranavk-official/compliance-dashboard.git
+    cd compliance-dashboard
+    ```
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+3.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+4.  **Build for production:**
+    ```bash
+    npm run build
+    ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Code Quality Improvements
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+This project has undergone a significant code quality overhaul:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- **Type Safety**: strict TypeScript configuration with no `any` types.
+- **Performance**: Heavy computations are memoized using `useMemo` and `useCallback`.
+- **Maintainability**: Constants and helper functions are centralized.
+- **Linting**: Enhanced ESLint configuration with strict rules for React Hooks and Fast Refresh.
+
+## Project Structure
+
+- `src/components`: UI components (including Shadcn UI components).
+- `src/lib`: Core logic, types, store, constants, and helper functions.
+    - `parser.ts`: Excel parsing logic.
+    - `store.ts`: Global state management.
+    - `constants.ts`: Centralized configuration.
+    - `helpers.ts`: Reusable utility functions.
+- `src/App.tsx`: Main application entry point.
+
+## License
+
+[MIT](LICENSE)

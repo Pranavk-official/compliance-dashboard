@@ -81,15 +81,11 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
         setCurrentSheetUrl
     } = useStore();
 
+
+
+    // State for loading and input
     const [sheetUrlInput, setSheetUrlInput] = React.useState('');
     const [isLoading, setIsLoading] = React.useState(false);
-
-    // Auto-load persisted URL
-    React.useEffect(() => {
-        if (currentSheetUrl && districts.length === 0) {
-            loadFromUrl(currentSheetUrl);
-        }
-    }, []); // Run once on mount
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -107,7 +103,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
         }
     };
 
-    const loadFromUrl = async (url: string) => {
+    const loadFromUrl = React.useCallback(async (url: string) => {
         // Extract ID: https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit...
         const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
         if (!match) {
@@ -135,7 +131,14 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [setDistricts, setCurrentSheetUrl, setIsLoading]);
+
+    // Auto-load persisted URL
+    React.useEffect(() => {
+        if (currentSheetUrl && districts.length === 0) {
+            loadFromUrl(currentSheetUrl);
+        }
+    }, [currentSheetUrl, districts.length, loadFromUrl]); // Run once on mount if URL exists
 
     const handleUrlSubmit = () => {
         if (!sheetUrlInput) return;
@@ -336,7 +339,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
 
                     {/* Section Toggle */}
                     <div className="bg-muted p-1 rounded-lg flex items-center w-full sm:w-auto">
-                        <Tabs value={complianceType} onValueChange={(val) => setComplianceType(val as any)} className="w-full">
+                        <Tabs value={complianceType} onValueChange={(value: string) => setComplianceType(value as '9(2)' | '13')} className="w-full">
                             <TabsList className="grid w-full sm:w-[200px] grid-cols-2 h-9">
                                 <TabsTrigger value="9(2)" className="text-xs sm:text-sm">Section 9(2)</TabsTrigger>
                                 <TabsTrigger value="13" className="text-xs sm:text-sm">Section 13</TabsTrigger>

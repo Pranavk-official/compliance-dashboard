@@ -28,6 +28,8 @@ interface DashboardState {
     setCurrentSheetUrl: (url: string | null) => void;
 }
 
+import { STORAGE_KEYS } from './constants';
+
 export const useStore = create<DashboardState>()(
     persist(
         (set) => ({
@@ -53,7 +55,7 @@ export const useStore = create<DashboardState>()(
             setCurrentSheetUrl: (url) => set({ currentSheetUrl: url })
         }),
         {
-            name: 'compliance-dashboard-storage',
+            name: STORAGE_KEYS.DASHBOARD_STATE,
             partialize: (state: DashboardState) => ({ currentSheetUrl: state.currentSheetUrl }),
         }
     )

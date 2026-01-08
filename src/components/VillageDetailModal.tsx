@@ -6,9 +6,237 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import type { Village } from '../lib/types';
+import type { Village, ComplianceItem } from '../lib/types';
 import { getStatusBadge, formatPercent, cn } from '../lib/utils';
-import { CheckCircle2, XCircle, TrendingUp, MapPin } from 'lucide-react';
+import { CheckCircle2, XCircle, TrendingUp, MapPin, Calendar, Clock, AlertTriangle } from 'lucide-react';
+
+// --- Sub-components ---
+
+const VillageHeader = ({ village, districtName, status, percent }: { village: Village, districtName: string, status: string, percent: number }) => {
+    const isCritical = village.isCritical;
+    const is92Published = village.stage === '9(2) Published';
+
+    return (
+        <DialogHeader className={cn(
+            "px-6 pt-6 pb-4 border-b-2 rounded-t-lg shrink-0",
+            isCritical
+                ? "bg-red-50/50 border-red-100"
+                : "bg-gradient-to-r from-blue-50 via-indigo-50/40 to-blue-50 border-blue-100"
+        )}>
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-3">
+                        <DialogTitle className="text-2xl font-bold text-gray-900">
+                            {village.name}
+                        </DialogTitle>
+                        {isCritical && (
+                            <Badge variant="destructive" className="animate-pulse">
+                                CRITICAL
+                            </Badge>
+                        )}
+                    </div>
+
+                    <DialogDescription className="space-y-4">
+                        {/* Location & Stage */}
+                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-base">
+                            <div className="flex items-center gap-2">
+                                <MapPin className="w-4 h-4 text-gray-500" />
+                                <span className="font-medium text-gray-700">{districtName}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-gray-500">Stage:</span>
+                                <span className="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                                    {village.stage}
+                                </span>
+                            </div>
+                            {is92Published && village.publishedDate && (
+                                <div className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-gray-500" />
+                                    <span className="text-gray-700">Published: <span className="font-medium">{village.publishedDate}</span></span>
+                                </div>
+                            )}
+                            {is92Published && village.daysPassedAfter92 !== null && (
+                                <div className={cn(
+                                    "flex items-center gap-2 px-2 py-0.5 rounded border",
+                                    isCritical
+                                        ? "bg-red-100 text-red-700 border-red-200"
+                                        : "bg-amber-50 text-amber-700 border-amber-200"
+                                )}>
+                                    <Clock className="w-4 h-4" />
+                                    <span className="font-medium">{village.daysPassedAfter92} Days Passed</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Officials Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm bg-white/50 p-3 rounded-lg border border-black/5">
+                            <div className="flex flex-col gap-1">
+                                <span className="text-xs text-gray-500 uppercase tracking-wider">Head Surveyor</span>
+                                <span className="font-medium text-gray-900">{village.headSurveyor}</span>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <span className="text-xs text-gray-500 uppercase tracking-wider">Gov. Surveyor</span>
+                                <span className="font-medium text-gray-900">{village.governmentSurveyor}</span>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <span className="text-xs text-gray-500 uppercase tracking-wider">Assistant Director</span>
+                                <span className="font-medium text-gray-900">{village.assistantDirector}</span>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <span className="text-xs text-gray-500 uppercase tracking-wider">Superintendent</span>
+                                <span className="font-medium text-gray-900">{village.superintendent}</span>
+                            </div>
+                        </div>
+                    </DialogDescription>
+                </div>
+                <Badge
+                    variant="outline"
+                    className={cn(
+                        "px-4 py-2 text-sm font-semibold shrink-0 self-start",
+                        getStatusBadge(percent)
+                    )}
+                >
+                    {status}
+                </Badge>
+            </div>
+        </DialogHeader>
+    );
+};
+
+const VillageStats = ({ village, percent, completedCount, totalCount, complianceType }: { village: Village, percent: number, completedCount: number, totalCount: number, complianceType: string }) => {
+    return (
+        <div className="px-6 py-4 bg-white border-b shrink-0">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="flex flex-col items-center p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100 shadow-sm">
+                    <TrendingUp className="w-5 h-5 text-purple-600 mb-2" />
+                    <div className="text-2xl font-bold text-gray-900">
+                        {formatPercent(village.overall_percent)}
+                    </div>
+                    <div className="text-xs font-medium text-gray-600 mt-1 uppercase tracking-wide">Overall</div>
+                </div>
+                <div className="flex flex-col items-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 shadow-sm">
+                    <TrendingUp className="w-5 h-5 text-blue-600 mb-2" />
+                    <div className="text-2xl font-bold text-gray-900">
+                        {formatPercent(percent)}
+                    </div>
+                    <div className="text-xs font-medium text-gray-600 mt-1 uppercase tracking-wide">Section {complianceType}</div>
+                </div>
+                <div className="flex flex-col items-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100 shadow-sm">
+                    <CheckCircle2 className="w-5 h-5 text-green-600 mb-2" />
+                    <div className="text-2xl font-bold text-gray-900">
+                        {completedCount}
+                    </div>
+                    <div className="text-xs font-medium text-gray-600 mt-1 uppercase tracking-wide">Completed</div>
+                </div>
+                <div className="flex flex-col items-center p-4 bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-200 shadow-sm">
+                    <XCircle className="w-5 h-5 text-gray-600 mb-2" />
+                    <div className="text-2xl font-bold text-gray-900">
+                        {totalCount - completedCount}
+                    </div>
+                    <div className="text-xs font-medium text-gray-600 mt-1 uppercase tracking-wide">Pending</div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const ComplianceItemList = ({ items, complianceType }: { items: ComplianceItem[], complianceType: string }) => {
+    return (
+        <div className="flex-1 flex flex-col min-h-0 bg-gray-50/50">
+            <div className="px-6 py-3 bg-gray-100/50 border-b flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                    Section {complianceType} Compliance Items
+                </h3>
+                <span className="text-xs text-muted-foreground">{items.length} Items</span>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {items.map((item, index) => {
+                        const isCompleted = item.status === 'Completed';
+                        const percentValue = Math.round(item.value * 100);
+
+                        return (
+                            <div
+                                key={item.id || index}
+                                className={cn(
+                                    "p-4 rounded-xl border transition-all hover:shadow-md bg-white",
+                                    isCompleted
+                                        ? "border-green-100 hover:border-green-300"
+                                        : "border-red-100 hover:border-red-300"
+                                )}
+                            >
+                                <div className="flex items-start gap-4">
+                                    <div
+                                        className={cn(
+                                            "shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-sm",
+                                            isCompleted ? "bg-green-100" : "bg-red-100"
+                                        )}
+                                    >
+                                        {isCompleted ? (
+                                            <CheckCircle2 className="w-5 h-5 text-green-600" />
+                                        ) : (
+                                            <XCircle className="w-5 h-5 text-red-600" />
+                                        )}
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-start justify-between gap-2 mb-2">
+                                            <h4 className="font-medium text-gray-900 text-sm leading-snug">
+                                                {item.name}
+                                            </h4>
+                                            <Badge
+                                                variant="outline"
+                                                className={cn(
+                                                    "shrink-0 font-semibold text-[10px] uppercase tracking-wide",
+                                                    isCompleted
+                                                        ? "bg-green-50 text-green-700 border-green-200"
+                                                        : "bg-red-50 text-red-700 border-red-200"
+                                                )}
+                                            >
+                                                {item.status}
+                                            </Badge>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <div>
+                                                <div className="flex items-center justify-between mb-1.5">
+                                                    <span className="text-xs text-gray-500">Progress</span>
+                                                    <span className="text-xs font-semibold text-gray-700">
+                                                        {percentValue}%
+                                                    </span>
+                                                </div>
+                                                <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                                                    <div
+                                                        className={cn(
+                                                            "h-full rounded-full transition-all duration-500",
+                                                            isCompleted
+                                                                ? "bg-gradient-to-r from-green-500 to-emerald-500"
+                                                                : "bg-gradient-to-r from-red-400 to-orange-400"
+                                                        )}
+                                                        style={{ width: `${percentValue}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {item.raw !== undefined && (
+                                                <div className="flex items-center gap-2 text-xs bg-gray-50 p-2 rounded border border-gray-100 w-fit">
+                                                    <span className="text-gray-500 font-medium">Recorded Value:</span>
+                                                    <span className="font-mono font-medium text-gray-900">{item.raw}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// --- Main Component ---
 
 interface VillageDetailModalProps {
     village: Village | null;
@@ -37,193 +265,29 @@ export const VillageDetailModal = ({
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="max-w-3xl max-h-[80vh] p-0 gap-0 flex flex-col">
-                {/* Header Section */}
-                <DialogHeader className="px-6 pt-6 pb-4 bg-gradient-to-r from-blue-50 via-indigo-50/40 to-blue-50 border-b-2 rounded-t-lg border-blue-100 shrink-0">
-                    <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                            <DialogTitle className="text-2xl font-bold text-gray-900 mb-3">
-                                {village.name}
-                            </DialogTitle>
-                            <DialogDescription className="space-y-2">
-                                <div className="flex items-center gap-2 text-base">
-                                    <MapPin className="w-4 h-4" />
-                                    <span className="font-medium text-gray-700">{districtName}</span>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                                    <div className="flex items-center gap-2 text-gray-600">
-                                        <span className="font-medium">Stage:</span>
-                                        <span className="font-semibold text-blue-700">{village.stage}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-gray-600">
-                                        <span className="font-medium">Head Surveyor:</span>
-                                        <span className="font-semibold text-blue-700">{village.headSurveyor}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-gray-600">
-                                        <span className="font-medium">Gov. Surveyor:</span>
-                                        <span className="font-semibold text-blue-700">{village.governmentSurveyor}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-gray-600">
-                                        <span className="font-medium">AD:</span>
-                                        <span className="font-semibold text-blue-700">{village.assistantDirector}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-gray-600 sm:col-span-2">
-                                        <span className="font-medium">Superintendent:</span>
-                                        <span className="font-semibold text-blue-700">{village.superintendent}</span>
-                                    </div>
-                                </div>
-                            </DialogDescription>
-                        </div>
-                        <Badge
-                            variant="outline"
-                            className={cn(
-                                "px-4 py-2 text-sm font-semibold shrink-0",
-                                getStatusBadge(percent)
-                            )}
-                        >
-                            {status}
-                        </Badge>
-                    </div>
-                </DialogHeader>
+            <DialogContent className={cn(
+                "max-w-3xl sm:max-w-5xl lg:max-w-6xl max-h-[90vh] p-0 gap-0 flex flex-col overflow-hidden border-2",
+                village.isCritical ? "border-red-500" : ""
+            )}>
+                <VillageHeader
+                    village={village}
+                    districtName={districtName}
+                    status={status}
+                    percent={percent}
+                />
 
-                {/* Stats Overview */}
-                <div className="px-6 py-4 bg-white border-b shrink-0">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                        <div className="flex flex-col items-center p-3 sm:p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border border-purple-100">
-                            <TrendingUp className="w-5 h-5 text-purple-600 mb-2" />
-                            <div className="text-xl sm:text-2xl font-bold text-gray-900">
-                                {formatPercent(village.overall_percent)}
-                            </div>
-                            <div className="text-xs text-gray-600 mt-1 text-center">Overall</div>
-                        </div>
-                        <div className="flex flex-col items-center p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
-                            <TrendingUp className="w-5 h-5 text-blue-600 mb-2" />
-                            <div className="text-xl sm:text-2xl font-bold text-gray-900">
-                                {formatPercent(percent)}
-                            </div>
-                            <div className="text-xs text-gray-600 mt-1 text-center">{complianceType}</div>
-                        </div>
-                        <div className="flex flex-col items-center p-3 sm:p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-100">
-                            <CheckCircle2 className="w-5 h-5 text-green-600 mb-2" />
-                            <div className="text-xl sm:text-2xl font-bold text-gray-900">
-                                {completedCount}
-                            </div>
-                            <div className="text-xs text-gray-600 mt-1 text-center">Completed</div>
-                        </div>
-                        <div className="flex flex-col items-center p-3 sm:p-4 bg-gradient-to-br from-gray-50 to-slate-50 rounded-lg border border-gray-200">
-                            <XCircle className="w-5 h-5 text-gray-600 mb-2" />
-                            <div className="text-xl sm:text-2xl font-bold text-gray-900">
-                                {totalCount - completedCount}
-                            </div>
-                            <div className="text-xs text-gray-600 mt-1 text-center">Pending</div>
-                        </div>
-                    </div>
-                </div>
+                <VillageStats
+                    village={village}
+                    percent={percent}
+                    completedCount={completedCount}
+                    totalCount={totalCount}
+                    complianceType={complianceType}
+                />
 
-                {/* Items List - Scrollable Area */}
-                <div className="flex-1 p-2">
-                    <h3 className="text-sm font-semibold text-gray-700 uppercase text-center">
-                        Section {complianceType} Compliance Items
-                    </h3>
-                </div>
-                <div className="flex-1 overflow-y-auto px-6 py-4">
-                    <div className="space-y-3">
-                        {items.map((item, index) => {
-                            const isCompleted = item.status === 'Completed';
-                            const percentValue = Math.round(item.value * 100);
-
-                            return (
-                                <div
-                                    key={item.id || index}
-                                    className={cn(
-                                        "p-4 rounded-lg border-2 transition-all hover:shadow-md",
-                                        isCompleted
-                                            ? "bg-green-50/50 border-green-200 hover:bg-green-50"
-                                            : "bg-red-50/50 border-red-200 hover:bg-red-50"
-                                    )}
-                                >
-                                    <div className="flex items-start gap-3">
-                                        <div
-                                            className={cn(
-                                                "shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5",
-                                                isCompleted ? "bg-green-500" : "bg-red-400"
-                                            )}
-                                        >
-                                            {isCompleted ? (
-                                                <CheckCircle2 className="w-4 h-4 text-white" />
-                                            ) : (
-                                                <XCircle className="w-4 h-4 text-white" />
-                                            )}
-                                        </div>
-
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-start justify-between gap-2 mb-2">
-                                                <h4 className="font-medium text-gray-900 text-sm leading-tight">
-                                                    {item.name}
-                                                </h4>
-                                                <Badge
-                                                    variant="outline"
-                                                    className={cn(
-                                                        "shrink-0 font-semibold",
-                                                        isCompleted
-                                                            ? "bg-green-100 text-green-700 border-green-300"
-                                                            : "bg-red-100 text-red-700 border-red-300"
-                                                    )}
-                                                >
-                                                    {item.status}
-                                                </Badge>
-                                            </div>
-
-                                            <div className="flex items-center gap-3 mt-2">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center justify-between mb-1">
-                                                        <span className="text-xs text-gray-600">Progress</span>
-                                                        <span className="text-xs font-semibold text-gray-700">
-                                                            {percentValue}%
-                                                        </span>
-                                                    </div>
-                                                    <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                                                        <div
-                                                            className={cn(
-                                                                "h-full rounded-full transition-all",
-                                                                isCompleted
-                                                                    ? "bg-gradient-to-r from-green-500 to-emerald-500"
-                                                                    : "bg-gradient-to-r from-red-400 to-orange-400"
-                                                            )}
-                                                            style={{ width: `${percentValue}%` }}
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                {item.raw !== undefined && (
-                                                    <div className="text-xs text-gray-600 bg-white px-3 py-1 rounded border border-gray-200">
-                                                        <span className="font-medium">Value:</span>{' '}
-                                                        <span className="font-mono">{item.raw}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {/* Footer */}
-                {/* <Separator />
-                <div className="px-6 py-4 bg-gray-50 flex items-center justify-between shrink-0">
-                    <div className="text-sm text-gray-600">
-                        <span className="font-medium">{completedCount}</span> of{' '}
-                        <span className="font-medium">{totalCount}</span> items completed
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="text-xs text-gray-500">Overall Progress:</div>
-                        <div className="font-bold text-lg text-gray-900">
-                            {formatPercent(percent)}
-                        </div>
-                    </div>
-                </div> */}
+                <ComplianceItemList
+                    items={items}
+                    complianceType={complianceType}
+                />
             </DialogContent>
         </Dialog>
     );

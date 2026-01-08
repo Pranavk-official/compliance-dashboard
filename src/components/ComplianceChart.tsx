@@ -2,7 +2,8 @@
 import { useStore } from '../lib/store';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } from 'recharts';
 import { formatPercent } from '../lib/utils';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { CHART_COLORS, PAGINATION, COMPLIANCE_THRESHOLDS, BREAKPOINTS } from '../lib/constants';
 
 export const ComplianceChart = () => {
     const { districts, complianceType, selectedDistrict } = useStore();
@@ -12,8 +13,8 @@ export const ComplianceChart = () => {
     // Detect screen size for responsive chart
     useEffect(() => {
         const checkScreenSize = () => {
-            setIsSmallScreen(window.innerWidth < 640);
-            setIsMediumScreen(window.innerWidth >= 640 && window.innerWidth < 1024);
+            setIsSmallScreen(window.innerWidth < BREAKPOINTS.SMALL);
+            setIsMediumScreen(window.innerWidth >= BREAKPOINTS.SMALL && window.innerWidth < BREAKPOINTS.LARGE);
         };
 
         checkScreenSize();
@@ -21,39 +22,42 @@ export const ComplianceChart = () => {
         return () => window.removeEventListener('resize', checkScreenSize);
     }, []);
 
-    // If a district is selected, maybe show Villages?
-    // For now, let's keep it simple: Show District Comparison if "All", show Villages if "District Select" (limit 20?)
+    // Memoize chart data for performance
+    const displayData = useMemo(() => {
+        let data: { name: string; value: number }[] = [];
 
-    let data: { name: string; value: number }[] = [];
-
-    if (!selectedDistrict) {
-        // Compare Districts
-        data = districts.map(d => ({
-            name: d.name,
-            value: complianceType === '9(2)' ? d.avg_92_percent : d.avg_13_percent
-        }));
-    } else {
-        // Compare Villages in District (Top 50?)
-        const district = districts.find(d => d.name === selectedDistrict);
-        if (district) {
-            data = district.villages.map(v => ({
-                name: v.name,
-                value: complianceType === '9(2)' ? v.sec92_percent : v.sec13_percent
+        if (!selectedDistrict) {
+            // Compare Districts
+            data = districts.map(d => ({
+                name: d.name,
+                value: complianceType === '9(2)' ? d.avg_92_percent : d.avg_13_percent
             }));
+        } else {
+            // Compare Villages in District
+            const district = districts.find(d => d.name === selectedDistrict);
+            if (district) {
+                data = district.villages.map(v => ({
+                    name: v.name,
+                    value: complianceType === '9(2)' ? v.sec92_percent : v.sec13_percent
+                }));
+            }
         }
-    }
 
-    // Sort by value desc
-    data.sort((a, b) => b.value - a.value);
+        // Sort by value desc
+        data.sort((a, b) => b.value - a.value);
 
-    // Limit based on screen size
-    const maxItems = isSmallScreen ? 10 : isMediumScreen ? 20 : 30;
-    const displayData = data.slice(0, maxItems);
+        // Limit based on screen size
+        const maxItems = isSmallScreen ? PAGINATION.CHART_ITEMS_SMALL : isMediumScreen ? PAGINATION.CHART_ITEMS_MEDIUM : PAGINATION.CHART_ITEMS_LARGE;
+        return data.slice(0, maxItems);
+    }, [districts, complianceType, selectedDistrict, isSmallScreen, isMediumScreen]);
 
-    const getColor = (val: number) => {
-        if (val >= 0.75) return '#10b981'; // emerald-500
-        if (val >= 0.50) return '#f59e0b'; // amber-500
-        return '#ef4444'; // red-500
+    /**
+     * Returns color based on compliance value
+     */
+    const getColor = (val: number): string => {
+        if (val >= COMPLIANCE_THRESHOLDS.HIGH) return CHART_COLORS.HIGH_COMPLIANCE;
+        if (val >= COMPLIANCE_THRESHOLDS.MEDIUM) return CHART_COLORS.MEDIUM_COMPLIANCE;
+        return CHART_COLORS.LOW_COMPLIANCE;
     };
 
     return (
@@ -89,7 +93,7 @@ export const ComplianceChart = () => {
                         domain={[0, 1]}
                     />
                     <Tooltip
-                        formatter={(val: any) => [formatPercent(Number(val)), 'Compliance']}
+                        formatter={(val: string | number | undefined) => [formatPercent(Number(val || 0)), 'Compliance']}
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: isSmallScreen ? '12px' : '14px' }}
                     />
                     <Bar dataKey="value" radius={[4, 4, 0, 0]}>
