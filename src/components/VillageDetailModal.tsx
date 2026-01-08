@@ -4,13 +4,11 @@ import {
     DrawerDescription,
     DrawerHeader,
     DrawerTitle,
-    DrawerClose
 } from '@/components/ui/drawer';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Village, ComplianceItem } from '../lib/types';
 import { getStatusBadge, formatPercent, cn } from '../lib/utils';
-import { CheckCircle2, XCircle, TrendingUp, MapPin, Calendar, Clock, X } from 'lucide-react';
+import { CheckCircle2, XCircle, TrendingUp, MapPin, Calendar, Clock } from 'lucide-react';
 
 // --- Sub-components ---
 
