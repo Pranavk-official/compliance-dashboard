@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Activity,
     Home,
-    AlertCircle,
     AlertTriangle,
     FileCheck,
     type LucideIcon
@@ -71,44 +70,62 @@ export const KPIGrid = () => {
         // Average across ALL villages
         const avgCompliance = totalVillages > 0 ? totalComplianceSum / totalVillages : 0;
 
-        // Status Counts
-        let completedVillages = 0;
-        let published92Villages = 0;
+        // Metric 1: 13 Published Villages
+        let published13Villages = 0;
+
+        // Metric 2: 9(2) Published (to be 13 Published)
+        let published92ToBe13Villages = 0;
+
+        // Metric 3: Above 90% Villages (based on toggled compliance type)
+        let above90Villages = 0;
+
+        // Metric 4: Critical Villages (9(2) published > 90 days)
         let criticalVillages = 0;
+
         activeDistricts.forEach(d => {
             d.villages.forEach(v => {
-                const status = complianceType === '9(2)' ? v.sec92_status : v.sec13_status;
-                if (status === 'Completed') completedVillages++;
-                if (v.publishedDate) published92Villages++;
-                if (v.isCritical) criticalVillages++;
+                // Metric 1 Logic: Count where 13 is completed
+                if (v.sec13_status === 'Completed') {
+                    published13Villages++;
+                }
+
+                // Metric 2 Logic: 9(2) Published AND NOT 13 Published
+                // Check if stage contains "9(2)" and "Published" (loosely)
+                const is92Published = v.stage.toLowerCase().includes('9(2)') && v.stage.toLowerCase().includes('published');
+                if (is92Published && v.sec13_status !== 'Completed') {
+                    published92ToBe13Villages++;
+                }
+
+                // Metric 3 Logic: Compliance > 90% (0.9)
+                const currentPercent = complianceType === '9(2)' ? v.sec92_percent : v.sec13_percent;
+                if (currentPercent >= 0.9) {
+                    above90Villages++;
+                }
+
+                // Metric 4 Logic: Critical (already calculated in parser)
+                if (v.isCritical) {
+                    criticalVillages++;
+                }
             });
         });
-        const pendingVillages = totalVillages - completedVillages;
 
         return {
             totalVillages,
             avgCompliance,
-            completedVillages,
-            pendingVillages,
-            criticalVillages,
-            published92Villages
+            published13Villages,
+            published92ToBe13Villages,
+            above90Villages,
+            criticalVillages
         };
     }, [districts, selectedDistrict, complianceType]);
 
     const {
         totalVillages,
-        avgCompliance,
-        completedVillages,
-        pendingVillages,
-        criticalVillages,
-        published92Villages
+        published13Villages,
+        published92ToBe13Villages,
+        above90Villages,
+        criticalVillages
     } = metrics;
-
-    const avgComplianceColor = avgCompliance >= 0.75
-        ? 'bg-gradient-to-br from-emerald-500 to-green-700'
-        : avgCompliance >= 0.50
-            ? 'bg-gradient-to-br from-amber-500 to-orange-700'
-            : 'bg-gradient-to-br from-rose-500 to-red-700';
 
     return (
         <>
@@ -117,59 +134,42 @@ export const KPIGrid = () => {
                 onClose={() => setShowCriticalModal(false)}
             />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-5 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 md:gap-6">
 
-                {/* 1. Completed Villages (13) */}
+                {/* 1. 13 Published Villages */}
                 <StatCard
-                    title="13 Completed Villages"
-                    value={completedVillages}
-                    subtext={`${totalVillages > 0 ? formatPercent(completedVillages / totalVillages) : '0%'} of total`}
+                    title="13 Published Villages"
+                    value={published13Villages}
+                    subtext={`${totalVillages > 0 ? formatPercent(published13Villages / totalVillages) : '0%'} of total`}
                     icon={Home}
-                    gradient="bg-gradient-to-br from-sky-500 to-blue-700"
+                    gradient="bg-gradient-to-br from-emerald-500 to-green-700"
                 />
 
-                {/* 2. 9(2) Published */}
+                {/* 2. 9(2) Published Villages ( to be 13 Published ) */}
                 <StatCard
-                    title="9(2) Published"
-                    value={published92Villages}
-                    subtext={`${totalVillages > 0 ? formatPercent(published92Villages / totalVillages) : '0%'} of total`}
+                    title="9(2) Published Villages"
+                    value={published92ToBe13Villages}
+                    subtext="(to be 13 Published)"
                     icon={FileCheck}
                     gradient="bg-gradient-to-br from-orange-400 to-pink-600"
                 />
 
-                {/* 3. Average Compliance */}
+                {/* 3. Above 90% Villages */}
                 <StatCard
-                    title="Avg Compliance"
-                    value={formatPercent(avgCompliance)}
-                    subtext={`For Section ${complianceType}`}
+                    title="Above 90% Villages"
+                    value={above90Villages}
+                    subtext={`${totalVillages > 0 ? formatPercent(above90Villages / totalVillages) : '0%'} of total`}
                     icon={Activity}
-                    gradient={avgComplianceColor}
+                    gradient="bg-gradient-to-br from-sky-500 to-indigo-700"
                 />
 
-                {/* 4. Pending Villages */}
+                {/* 4. No of Villages > 90 days passed after 9 (2) Publication */}
                 <StatCard
-                    title="Pending Villages"
-                    value={pendingVillages}
-                    subtext={
-                        <span>
-                            Requires Attention<span className="hidden sm:inline"> (Click to view)</span>
-                        </span>
-                    }
-                    icon={AlertCircle}
-                    gradient="bg-gradient-to-br from-violet-500 to-purple-700"
-                    onClick={() => {
-                        useStore.getState().setStatusFilter('Pending');
-                        document.getElementById('village-table')?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                />
-
-                {/* 5. Critical Villages */}
-                <StatCard
-                    title="Critical Villages"
+                    title="Pending > 90 Days"
                     value={criticalVillages}
                     subtext={
                         <span>
-                            9(2) Published ≥90 days<span className="hidden sm:inline"> (Click to view)</span>
+                            After 9(2) Publication <span className="hidden sm:inline">(Click to view)</span>
                         </span>
                     }
                     icon={AlertTriangle}
