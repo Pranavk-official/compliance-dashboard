@@ -62,7 +62,7 @@ const DashboardSkeleton = () => {
                     {/* Chart Skeleton - Responsive height */}
                     <Skeleton className="min-h-[250px] h-[35vh] sm:min-h-[300px] sm:h-[40vh] md:min-h-[350px] md:h-[45vh] max-h-[400px] sm:max-h-[500px] md:max-h-[600px] rounded-xl" />
                     {/* Table Skeleton - Responsive height */}
-                    <Skeleton className="min-h-[500px] h-[700px] sm:h-[750px] md:h-[700px] max-h-[80vh] rounded-xl" />
+                    {/* <Skeleton className="min-h-[500px] h-[700px] sm:h-[750px] md:h-[700px] max-h-[80vh] rounded-xl" /> */}
                 </div>
             </main>
         </div>
