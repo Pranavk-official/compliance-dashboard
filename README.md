@@ -43,6 +43,31 @@ A modern, responsive dashboard for tracking survey compliance status across dist
     npm run build
     ```
 
+## Deployment
+
+This project is configured for automatic deployment to GitHub Pages:
+
+- **Automatic Deployment**: Every push to the `main` branch automatically triggers a build and deployment.
+- **GitHub Actions**: The workflow is defined in `.github/workflows/deploy.yml`.
+- **Live URL**: Once deployed, the application will be available at `https://pranavk-official.github.io/compliance-dashboard/`
+
+### Manual Deployment
+
+You can also deploy manually using:
+```bash
+npm run deploy
+```
+
+This will build the project and push to the `gh-pages` branch.
+
+### First-time Setup
+
+Before automatic deployment works, ensure:
+
+1. GitHub Pages is enabled in your repository settings (`Settings > Pages`)
+2. Source is set to "GitHub Actions"
+3. The workflow has necessary permissions (configured in the workflow file)
+
 ## Code Quality Improvements
 
 This project has undergone a significant code quality overhaul:
