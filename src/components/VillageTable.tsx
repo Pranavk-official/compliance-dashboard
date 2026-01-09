@@ -34,8 +34,6 @@ export const VillageTable = () => {
         selectedDistrict,
         setSelectedDistrict,
         complianceType,
-        statusFilter,
-        setStatusFilter,
         stageFilter,
         setStageFilter,
         searchQuery,
@@ -61,13 +59,6 @@ export const VillageTable = () => {
         let villages = activeDistricts.flatMap(d => d.villages.map(v => ({ ...v, districtName: d.name })));
 
         // Apply filters
-        if (statusFilter !== 'All') {
-            villages = villages.filter(v => {
-                const status = complianceType === '9(2)' ? v.sec92_status : v.sec13_status;
-                return status === statusFilter;
-            });
-        }
-
         if (stageFilter) {
             villages = villages.filter(v => v.stage === stageFilter);
         }
@@ -85,7 +76,7 @@ export const VillageTable = () => {
         uniqueStages.sort();
 
         return { filteredVillages: villages, uniqueStages };
-    }, [districts, selectedDistrict, complianceType, statusFilter, stageFilter, searchQuery]);
+    }, [districts, selectedDistrict, complianceType, stageFilter, searchQuery]);
 
     // Pagination
     const [page, setPage] = useState(1);
@@ -169,21 +160,6 @@ export const VillageTable = () => {
                             {districts.map(d => (
                                 <SelectItem key={d.name} value={d.name}>{d.name}</SelectItem>
                             ))}
-                        </SelectContent>
-                    </Select>
-
-                    {/* Status Filter */}
-                    <Select
-                        value={statusFilter}
-                        onValueChange={(value: string) => setStatusFilter(value as 'All' | 'Completed' | 'Pending')}
-                    >
-                        <SelectTrigger className="w-full sm:flex-1 md:w-[150px] h-9">
-                            <SelectValue placeholder="Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="All">All Status</SelectItem>
-                            <SelectItem value="Completed">Completed</SelectItem>
-                            <SelectItem value="Pending">Pending</SelectItem>
                         </SelectContent>
                     </Select>
 

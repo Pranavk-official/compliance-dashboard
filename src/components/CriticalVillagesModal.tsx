@@ -87,18 +87,25 @@ export const CriticalVillagesModal = ({ open, onClose }: CriticalVillagesModalPr
 
         // Sort
         result.sort((a, b) => {
-            let valA = a[sortConfig.key];
-            let valB = b[sortConfig.key];
+            let valA: string | number = a[sortConfig.key];
+            let valB: string | number = b[sortConfig.key];
 
-            // Handle numeric sort for month string if needed, or just rely on days passed for strict accuracy
+            // Handle numeric sort for month string
             if (sortConfig.key === 'month') {
                 valA = parseFloat(a.month);
                 valB = parseFloat(b.month);
             }
 
-            if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-            if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
-            return 0;
+            // Handle string vs number comparison
+            if (typeof valA === 'string' && typeof valB === 'string') {
+                return sortConfig.direction === 'asc'
+                    ? valA.localeCompare(valB)
+                    : valB.localeCompare(valA);
+            } else {
+                if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            }
         });
 
         return result;
@@ -124,7 +131,7 @@ export const CriticalVillagesModal = ({ open, onClose }: CriticalVillagesModalPr
     const handleSort = (key: SortKey) => {
         setSortConfig(current => ({
             key,
-            direction: current.key === key && current.direction === 'desc' ? 'asc' : 'desc'
+            direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
         }));
     };
 

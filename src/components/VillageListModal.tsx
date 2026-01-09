@@ -111,7 +111,7 @@ export const VillageListModal = ({
     const handleSort = (key: SortKey) => {
         setSortConfig(current => ({
             key,
-            direction: current.key === key && current.direction === 'desc' ? 'asc' : 'desc'
+            direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
         }));
     };
 

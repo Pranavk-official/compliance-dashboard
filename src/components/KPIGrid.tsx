@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useStore } from '../lib/store';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import {
     Activity,
     Home,
@@ -29,19 +29,24 @@ const StatCard = ({ title, value, subtext, icon: Icon, gradient, onClick }: Stat
             className={`relative overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1 duration-300 min-h-[120px] sm:min-h-[140px] ${gradient} ${onClick ? 'cursor-pointer' : ''}`}
             onClick={onClick}
         >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
-                <CardTitle className="text-xs sm:text-sm font-medium text-white/90">
-                    {title}
-                </CardTitle>
-                <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+            <CardContent className="p-4 sm:p-6 flex flex-col items-start justify-between h-full relative z-10">
+                {/* Icon in top right */}
+                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
                     <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 </div>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4 pt-0">
-                <div className="text-6xl font-bold text-white">{value}</div>
-                <p className="text-xs text-white/80 mt-1">
-                    {subtext}
-                </p>
+
+                {/* Value on top */}
+                <div className="text-5xl sm:text-6xl font-bold text-white mb-2 sm:mb-3">{value}</div>
+
+                {/* Title and subtext below */}
+                <div className="w-full">
+                    <CardTitle className="text-sm sm:text-base font-semibold text-white mb-1">
+                        {title}
+                    </CardTitle>
+                    <p className="text-xs sm:text-sm text-white/80">
+                        {subtext}
+                    </p>
+                </div>
             </CardContent>
             {/* Decorative background circle */}
             <div className="absolute bottom-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mb-12 sm:-mb-16 pointer-events-none"></div>
