@@ -28,6 +28,7 @@ interface CriticalVillage {
     headSurveyor: string;
     daysPassedAfter92: number;
     month: string;
+    timeDisplay: string; // New field for formatted display (e.g., "13.5 M" or "1.2 Y")
     publishedDate: string | null;
     originalVillage: Village;
 }
@@ -39,6 +40,22 @@ interface CriticalVillagesModalProps {
 
 type SortKey = 'name' | 'district' | 'daysPassedAfter92' | 'month';
 type SortDirection = 'asc' | 'desc';
+
+/**
+ * Format time period to display years when months > 12, otherwise months
+ * @param days - Number of days passed
+ * @returns Formatted string like "1.2 Y" or "13.5 M"
+ */
+const formatTimePeriod = (days: number): string => {
+    const months = days / 30;
+
+    if (months > 12) {
+        const years = months / 12;
+        return `${years.toFixed(1)} Y`;
+    }
+
+    return `${months.toFixed(1)} M`;
+};
 
 export const CriticalVillagesModal = ({ open, onClose }: CriticalVillagesModalProps) => {
     const { districts } = useStore();
@@ -62,6 +79,7 @@ export const CriticalVillagesModal = ({ open, onClose }: CriticalVillagesModalPr
                         headSurveyor: v.headSurveyor,
                         daysPassedAfter92: v.daysPassedAfter92!,
                         month: (v.daysPassedAfter92! / 30).toFixed(1),
+                        timeDisplay: formatTimePeriod(v.daysPassedAfter92!),
                         publishedDate: v.publishedDate,
                         originalVillage: v
                     });
@@ -235,7 +253,7 @@ export const CriticalVillagesModal = ({ open, onClose }: CriticalVillagesModalPr
                                         onClick={() => handleSort('month')}
                                     >
                                         <div className="flex items-center gap-2">
-                                            Months <SortIcon columnKey="month" />
+                                            Period <SortIcon columnKey="month" />
                                         </div>
                                     </TableHead>
                                 </TableRow>
@@ -301,7 +319,7 @@ export const CriticalVillagesModal = ({ open, onClose }: CriticalVillagesModalPr
                                             </TableCell>
                                             <TableCell>
                                                 <div className="font-mono font-medium text-gray-700">
-                                                    {village.month} M
+                                                    {village.timeDisplay}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
