@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { VillageListModal } from './VillageListModal';
 import { CriticalVillagesModal } from './CriticalVillagesModal';
+import { isAbove90Stage } from '../lib/config';
 
 
 // --- Reusable Card Component ---
@@ -40,7 +41,7 @@ const StatCard = ({ title, value, subtext, icon: Icon, gradient, onClick }: Stat
 
                 {/* Title and subtext below */}
                 <div className="w-full">
-                    <CardTitle className="text-sm sm:text-base font-semibold text-white mb-1">
+                    <CardTitle className="text-lg sm:text-base font-semibold text-white mb-1">
                         {title}
                     </CardTitle>
                     <p className="text-xs sm:text-sm text-white/80">
@@ -99,9 +100,9 @@ export const KPIGrid = () => {
                     list92Published.push(v);
                 }
 
-                // Metric 3 Logic: Compliance > 90%
-                // CHANGED: Now based on Stage containing "Above 90%"
-                if (v.stage && v.stage.toLowerCase().includes('above 90')) {
+                // Metric 3 Logic: Above 90% Field Survey
+                // Uses centralized config for flexible pattern matching
+                if (isAbove90Stage(v.stage)) {
                     listAbove90.push(v);
                 }
 
@@ -179,10 +180,10 @@ export const KPIGrid = () => {
                 <StatCard
                     title="Above 90% Villages"
                     value={listAbove90.length}
-                    subtext="High Compliance (>90%)"
+                    subtext="Field Survey (>90%)"
                     icon={Activity}
                     gradient="bg-gradient-to-br from-sky-500 to-indigo-700"
-                    onClick={() => openModal("Above 90% Villages", listAbove90, 'blue', <Activity />, "Villages with more than 90% overall compliance.", '9(2)')}
+                    onClick={() => openModal("Above 90% Villages", listAbove90, 'blue', <Activity />, "Villages currently at 'Above 90%' stage - field survey completion exceeds 90% but pending 9(2) publication.", '9(2)')}
                 />
 
                 {/* 4. No of Villages > 90 days passed after 9 (2) Publication */}

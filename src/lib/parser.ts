@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import type { District, Village, ComplianceItem } from './types';
 import { EXCEL_ROW_INDICES, COMPLIANCE_THRESHOLDS } from './constants';
 import { excelDateToISO, isNonEmptyString, isValidNumber, clamp } from './helpers';
+import { SHEET_CONFIG, shouldExcludeSheet } from './config';
 
 /**
  * Type definition for Excel row data
@@ -20,19 +21,12 @@ export const parseExcel = async (file: File): Promise<District[]> => {
         const workbook = XLSX.read(buffer, { type: 'array' });
         const districts: District[] = [];
 
-        // Skip first sheet (Guideline) and process all other sheets except 'test'
-        for (let i = 1; i < workbook.SheetNames.length; i++) {
+        // Start from configured first sheet index and process all other sheets
+        for (let i = SHEET_CONFIG.FIRST_SHEET_INDEX; i < workbook.SheetNames.length; i++) {
             const sheetName = workbook.SheetNames[i];
 
-            // Skip 'test' and specific ignored sheets (case-insensitive)
-            const lowerSheetName = sheetName.toLowerCase().trim();
-            if (
-                lowerSheetName === 'test' ||
-                lowerSheetName === 'sheet 17' ||
-                lowerSheetName === 'sheet 128' ||
-                lowerSheetName === 'sheet17' ||
-                lowerSheetName === 'sheet128'
-            ) {
+            // Skip excluded sheets using centralized config
+            if (shouldExcludeSheet(sheetName)) {
                 continue;
             }
 

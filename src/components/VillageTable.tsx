@@ -1,7 +1,7 @@
 import { useStore } from '../lib/store';
 import { getStatusBadge, formatPercent, formatValue, cn } from '../lib/utils';
 import { useState, useMemo } from 'react';
-import { Download, Search, Filter, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, Search, Filter, Eye, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { VillageDetailModal } from './VillageDetailModal';
@@ -28,6 +28,9 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 
+type SortField = 'village' | 'stage' | 'headSurveyor' | 'completion' | 'overall';
+type SortOrder = 'asc' | 'desc';
+
 export const VillageTable = () => {
     const {
         districts,
@@ -44,12 +47,32 @@ export const VillageTable = () => {
     const [selectedVillage, setSelectedVillage] = useState<Village | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    // State for Sorting
+    const [sortField, setSortField] = useState<SortField | null>(null);
+    const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
+    // Pagination
+    const [page, setPage] = useState(1);
+
+    const handleSort = (field: SortField) => {
+        if (sortField === field) {
+            // Toggle sort order
+            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+        } else {
+            // New field, default to ascending
+            setSortField(field);
+            setSortOrder('asc');
+        }
+        // Reset to first page when sorting changes
+        setPage(1);
+    };
+
     const openModal = (village: Village) => {
         setSelectedVillage(village);
         setIsModalOpen(true);
     };
 
-    // Memoize filtered villages for performance
+    // Memoize filtered and sorted villages for performance
     const { filteredVillages, uniqueStages } = useMemo(() => {
         // Flatten villages
         const activeDistricts = selectedDistrict
@@ -71,15 +94,44 @@ export const VillageTable = () => {
             );
         }
 
+        // Apply sorting
+        if (sortField) {
+            villages.sort((a, b) => {
+                let compareValue = 0;
+
+                switch (sortField) {
+                    case 'village':
+                        compareValue = a.name.localeCompare(b.name);
+                        break;
+                    case 'stage':
+                        compareValue = a.stage.localeCompare(b.stage);
+                        break;
+                    case 'headSurveyor':
+                        compareValue = a.headSurveyor.localeCompare(b.headSurveyor);
+                        break;
+                    case 'completion': {
+                        const aPercent = complianceType === '9(2)' ? a.sec92_percent : a.sec13_percent;
+                        const bPercent = complianceType === '9(2)' ? b.sec92_percent : b.sec13_percent;
+                        compareValue = aPercent - bPercent;
+                        break;
+                    }
+                    case 'overall':
+                        compareValue = a.overall_percent - b.overall_percent;
+                        break;
+                }
+
+                return sortOrder === 'asc' ? compareValue : -compareValue;
+            });
+        }
+
         // Get unique stages for filter
         const uniqueStages = Array.from(new Set(activeDistricts.flatMap(d => d.villages.map(v => v.stage))));
         uniqueStages.sort();
 
         return { filteredVillages: villages, uniqueStages };
-    }, [districts, selectedDistrict, complianceType, stageFilter, searchQuery]);
+    }, [districts, selectedDistrict, complianceType, stageFilter, searchQuery, sortField, sortOrder]);
 
-    // Pagination
-    const [page, setPage] = useState(1);
+    // Pagination variables
     const pageSize = PAGINATION.DEFAULT_PAGE_SIZE;
     const totalPages = Math.ceil(filteredVillages.length / pageSize);
     const paginatedVillages = filteredVillages.slice((page - 1) * pageSize, page * pageSize);
@@ -199,13 +251,80 @@ export const VillageTable = () => {
                     <TableHeader className="bg-gray-50 sticky top-0 z-10">
                         <TableRow>
                             <TableHead className="w-[50px] font-semibold text-gray-700">Actions</TableHead>
-                            <TableHead className="w-[200px] font-semibold text-gray-700">Village</TableHead>
-                            <TableHead className="w-[120px] font-semibold text-gray-700">Stage</TableHead>
-                            <TableHead className="w-[150px] font-semibold text-gray-700">Head Surveyor</TableHead>
+
+                            {/* Sortable: Village */}
+                            <TableHead className="w-[200px]">
+                                <button
+                                    onClick={() => handleSort('village')}
+                                    className="flex items-center gap-1 font-semibold text-gray-700 hover:text-gray-900 transition-colors"
+                                >
+                                    Village
+                                    <ArrowUpDown className={cn(
+                                        "w-4 h-4",
+                                        sortField === 'village' ? "text-blue-600" : "text-gray-400"
+                                    )} />
+                                </button>
+                            </TableHead>
+
+                            {/* Sortable: Stage */}
+                            <TableHead className="w-[120px]">
+                                <button
+                                    onClick={() => handleSort('stage')}
+                                    className="flex items-center gap-1 font-semibold text-gray-700 hover:text-gray-900 transition-colors"
+                                >
+                                    Stage
+                                    <ArrowUpDown className={cn(
+                                        "w-4 h-4",
+                                        sortField === 'stage' ? "text-blue-600" : "text-gray-400"
+                                    )} />
+                                </button>
+                            </TableHead>
+
+                            {/* Sortable: Head Surveyor */}
+                            <TableHead className="w-[150px]">
+                                <button
+                                    onClick={() => handleSort('headSurveyor')}
+                                    className="flex items-center gap-1 font-semibold text-gray-700 hover:text-gray-900 transition-colors"
+                                >
+                                    Head Surveyor
+                                    <ArrowUpDown className={cn(
+                                        "w-4 h-4",
+                                        sortField === 'headSurveyor' ? "text-blue-600" : "text-gray-400"
+                                    )} />
+                                </button>
+                            </TableHead>
+
                             <TableHead className="w-[120px] font-semibold text-gray-700">Status</TableHead>
-                            <TableHead className="w-[100px] font-semibold text-gray-700">%</TableHead>
-                            <TableHead className="w-[120px] font-semibold text-gray-700">Overall %</TableHead>
-                            {/* Dynamic Columns */}
+
+                            {/* Sortable: Completion % */}
+                            <TableHead className="w-[100px]">
+                                <button
+                                    onClick={() => handleSort('completion')}
+                                    className="flex items-center gap-1 font-semibold text-gray-700 hover:text-gray-900 transition-colors"
+                                >
+                                    %
+                                    <ArrowUpDown className={cn(
+                                        "w-4 h-4",
+                                        sortField === 'completion' ? "text-blue-600" : "text-gray-400"
+                                    )} />
+                                </button>
+                            </TableHead>
+
+                            {/* Sortable: Overall % */}
+                            <TableHead className="w-[120px]">
+                                <button
+                                    onClick={() => handleSort('overall')}
+                                    className="flex items-center gap-1 font-semibold text-gray-700 hover:text-gray-900 transition-colors"
+                                >
+                                    Overall %
+                                    <ArrowUpDown className={cn(
+                                        "w-4 h-4",
+                                        sortField === 'overall' ? "text-blue-600" : "text-gray-400"
+                                    )} />
+                                </button>
+                            </TableHead>
+
+                            {/* Dynamic Columns - Not Sortable */}
                             {itemColumns.map((col, idx) => (
                                 <TableHead key={idx} className="min-w-[200px] font-semibold text-gray-700">
                                     <div className="truncate max-w-[180px]" title={col}>
