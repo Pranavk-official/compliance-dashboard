@@ -108,28 +108,28 @@ const VillageStats = ({ village, percent, completedCount, totalCount, compliance
     return (
         <div className="px-4 sm:px-6 py-4 bg-white border-b shrink-0">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                <div className="flex flex-col items-center p-3 sm:p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100 shadow-sm">
+                <div className="flex flex-col items-center p-3 sm:p-4 bg-linear-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100 shadow-sm">
                     <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 mb-1 sm:mb-2" />
                     <div className="text-xl sm:text-2xl font-bold text-gray-900">
                         {formatPercent(village.overall_percent)}
                     </div>
                     <div className="text-[10px] sm:text-xs font-medium text-gray-600 mt-1 uppercase tracking-wide">Overall</div>
                 </div>
-                <div className="flex flex-col items-center p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 shadow-sm">
+                <div className="flex flex-col items-center p-3 sm:p-4 bg-linear-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 shadow-sm">
                     <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 mb-1 sm:mb-2" />
                     <div className="text-xl sm:text-2xl font-bold text-gray-900">
                         {formatPercent(percent)}
                     </div>
                     <div className="text-[10px] sm:text-xs font-medium text-gray-600 mt-1 uppercase tracking-wide">Section {complianceType}</div>
                 </div>
-                <div className="flex flex-col items-center p-3 sm:p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100 shadow-sm">
+                <div className="flex flex-col items-center p-3 sm:p-4 bg-linear-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100 shadow-sm">
                     <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mb-1 sm:mb-2" />
                     <div className="text-xl sm:text-2xl font-bold text-gray-900">
                         {completedCount}
                     </div>
                     <div className="text-[10px] sm:text-xs font-medium text-gray-600 mt-1 uppercase tracking-wide">Completed</div>
                 </div>
-                <div className="flex flex-col items-center p-3 sm:p-4 bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex flex-col items-center p-3 sm:p-4 bg-linear-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-200 shadow-sm">
                     <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 mb-1 sm:mb-2" />
                     <div className="text-xl sm:text-2xl font-bold text-gray-900">
                         {totalCount - completedCount}
@@ -211,8 +211,8 @@ const ComplianceItemList = ({ items, complianceType }: { items: ComplianceItem[]
                                                         className={cn(
                                                             "h-full rounded-full transition-all duration-500",
                                                             isCompleted
-                                                                ? "bg-gradient-to-r from-green-500 to-emerald-500"
-                                                                : "bg-gradient-to-r from-red-400 to-orange-400"
+                                                                ? "bg-linear-to-r from-green-500 to-emerald-500"
+                                                                : "bg-linear-to-r from-red-400 to-orange-400"
                                                         )}
                                                         style={{ width: `${percentValue}%` }}
                                                     />
