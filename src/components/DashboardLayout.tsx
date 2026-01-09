@@ -75,8 +75,6 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
         districts,
         selectedDistrict,
         setSelectedDistrict,
-        complianceType,
-        setComplianceType,
         currentSheetUrl,
         setCurrentSheetUrl
     } = useStore();
@@ -320,7 +318,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
                 <div className="bg-background border-b border-border px-3 sm:px-4 md:px-6 py-2 sm:py-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 md:gap-6 overflow-x-auto sticky z-10" style={{ top: 'calc(60px + env(safe-area-inset-top))' }}>
                     {/* District Selector */}
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                        <span className="text-xs sm:text-sm font-medium text-muted-foreground">District:</span>
+                        <span className="text-xs sm:text-sm font-medium text-muted-foreground">District/AD:</span>
                         <Select
                             value={selectedDistrict || "all"}
                             onValueChange={(val) => setSelectedDistrict(val === "all" ? null : val)}
@@ -337,15 +335,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
                         </Select>
                     </div>
 
-                    {/* Section Toggle */}
-                    <div className="bg-muted p-1 rounded-lg flex items-center w-full sm:w-auto">
-                        <Tabs value={complianceType} onValueChange={(value: string) => setComplianceType(value as '9(2)' | '13')} className="w-full">
-                            <TabsList className="grid w-full sm:w-[200px] grid-cols-2 h-9">
-                                <TabsTrigger value="9(2)" className="text-xs sm:text-sm">Section 9(2)</TabsTrigger>
-                                <TabsTrigger value="13" className="text-xs sm:text-sm">Section 13</TabsTrigger>
-                            </TabsList>
-                        </Tabs>
-                    </div>
+
                 </div>
             )}
 

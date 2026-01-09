@@ -5,6 +5,41 @@ import { formatPercent } from '../lib/utils';
 import { useEffect, useState, useMemo } from 'react';
 import { CHART_COLORS, PAGINATION, COMPLIANCE_THRESHOLDS, BREAKPOINTS } from '../lib/constants';
 
+// Custom Tooltip Component
+const CustomTooltip = ({ active, payload }: {
+    active?: boolean;
+    payload?: Array<{
+        payload: {
+            name: string;
+            value: number;
+            stageCounts: Record<string, number>;
+        };
+    }>;
+}) => {
+    if (active && payload && payload.length > 0) {
+        const data = payload[0].payload;
+
+        return (
+            <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+                <p className="font-semibold text-gray-900 mb-2">{data.name}</p>
+                <p className="text-sm text-gray-700 mb-2">
+                    <span className="font-medium">Compliance:</span> {formatPercent(data.value)}
+                </p>
+                <div className="border-t pt-2 mt-2">
+                    <p className="text-xs font-semibold text-gray-600 mb-1">Stage Breakdown:</p>
+                    {Object.entries(data.stageCounts).map(([stage, count]) => (
+                        <div key={stage} className="text-xs text-gray-600 flex justify-between gap-3">
+                            <span className="truncate max-w-[150px]">{stage}:</span>
+                            <span className="font-medium">{count}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+    return null;
+};
+
 export const ComplianceChart = () => {
     const { districts, complianceType, selectedDistrict } = useStore();
     const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -24,27 +59,34 @@ export const ComplianceChart = () => {
 
     // Memoize chart data for performance
     const displayData = useMemo(() => {
-        let data: { name: string; value: number }[] = [];
+        let data: { name: string; value: number; stageCounts: Record<string, number> }[] = [];
 
         if (!selectedDistrict) {
-            // Compare Districts
-            data = districts.map(d => ({
-                name: d.name,
-                value: complianceType === '9(2)' ? d.avg_92_percent : d.avg_13_percent
-            }));
+            // Compare Districts - aggregate stage counts across all villages
+            data = districts.map(d => {
+                const stageCounts: Record<string, number> = {};
+                d.villages.forEach(v => {
+                    stageCounts[v.stage] = (stageCounts[v.stage] || 0) + 1;
+                });
+                return {
+                    name: d.name,
+                    value: complianceType === '9(2)' ? d.avg_92_percent : d.avg_13_percent,
+                    stageCounts
+                };
+            });
         } else {
-            // Compare Villages in District
+            // Compare Villages in District - show single stage for each village
             const district = districts.find(d => d.name === selectedDistrict);
             if (district) {
                 data = district.villages.map(v => ({
                     name: v.name,
-                    value: complianceType === '9(2)' ? v.sec92_percent : v.sec13_percent
+                    value: complianceType === '9(2)' ? v.sec92_percent : v.sec13_percent,
+                    stageCounts: { [v.stage]: 1 }
                 }));
             }
         }
 
-        // Sort by value desc
-        data.sort((a, b) => b.value - a.value);
+        // Keep original order from sheet (no sorting by value)
 
         // Limit based on screen size
         const maxItems = isSmallScreen ? PAGINATION.CHART_ITEMS_SMALL : isMediumScreen ? PAGINATION.CHART_ITEMS_MEDIUM : PAGINATION.CHART_ITEMS_LARGE;
@@ -93,8 +135,7 @@ export const ComplianceChart = () => {
                         domain={[0, 1]}
                     />
                     <Tooltip
-                        formatter={(val: string | number | undefined) => [formatPercent(Number(val || 0)), 'Compliance']}
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: isSmallScreen ? '12px' : '14px' }}
+                        content={<CustomTooltip />}
                     />
                     <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                         {displayData.map((entry, index) => (

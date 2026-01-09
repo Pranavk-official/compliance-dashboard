@@ -218,120 +218,118 @@ export const VillageTable = () => {
             </div>
 
             {/* Table */}
-            <div className="flex-1 overflow-auto">
-                <div className="min-w-[1200px]">
-                    <Table>
-                        <TableHeader className="bg-gradient-to-r from-blue-50 via-indigo-50/40 to-blue-50 sticky top-0 z-10 shadow-sm border-b-2">
-                            <TableRow className="hover:bg-gray-50/50">
-                                <TableHead className="w-[50px] font-semibold text-gray-700">Actions</TableHead>
-                                <TableHead className="w-[200px] font-semibold text-gray-700">Village</TableHead>
-                                <TableHead className="w-[120px] font-semibold text-gray-700">Stage</TableHead>
-                                <TableHead className="w-[150px] font-semibold text-gray-700">Head Surveyor</TableHead>
-                                <TableHead className="w-[120px] font-semibold text-gray-700">Status</TableHead>
-                                <TableHead className="w-[100px] font-semibold text-gray-700">%</TableHead>
-                                <TableHead className="w-[120px] font-semibold text-gray-700">Overall %</TableHead>
-                                {/* Dynamic Columns */}
-                                {itemColumns.map((col, idx) => (
-                                    <TableHead key={idx} className="min-w-[200px] font-semibold text-gray-700">
-                                        <div className="truncate max-w-[180px]" title={col}>
-                                            {col}
-                                        </div>
-                                    </TableHead>
-                                ))}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {paginatedVillages.map((v, i) => {
-                                const percent = complianceType === '9(2)' ? v.sec92_percent : v.sec13_percent;
-                                const status = complianceType === '9(2)' ? v.sec92_status : v.sec13_status;
-                                const items = complianceType === '9(2)' ? v.sec92_items : v.sec13_items;
+            <div className="flex-1 overflow-auto border rounded-lg">
+                <Table>
+                    <TableHeader className="bg-gray-50 sticky top-0 z-10">
+                        <TableRow>
+                            <TableHead className="w-[50px] font-semibold text-gray-700">Actions</TableHead>
+                            <TableHead className="w-[200px] font-semibold text-gray-700">Village</TableHead>
+                            <TableHead className="w-[120px] font-semibold text-gray-700">Stage</TableHead>
+                            <TableHead className="w-[150px] font-semibold text-gray-700">Head Surveyor</TableHead>
+                            <TableHead className="w-[120px] font-semibold text-gray-700">Status</TableHead>
+                            <TableHead className="w-[100px] font-semibold text-gray-700">%</TableHead>
+                            <TableHead className="w-[120px] font-semibold text-gray-700">Overall %</TableHead>
+                            {/* Dynamic Columns */}
+                            {itemColumns.map((col, idx) => (
+                                <TableHead key={idx} className="min-w-[200px] font-semibold text-gray-700">
+                                    <div className="truncate max-w-[180px]" title={col}>
+                                        {col}
+                                    </div>
+                                </TableHead>
+                            ))}
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {paginatedVillages.map((v, i) => {
+                            const percent = complianceType === '9(2)' ? v.sec92_percent : v.sec13_percent;
+                            const status = complianceType === '9(2)' ? v.sec92_status : v.sec13_status;
+                            const items = complianceType === '9(2)' ? v.sec92_items : v.sec13_items;
 
-                                return (
-                                    <TableRow key={v.id + i} className="hover:bg-muted/30 transition-colors">
-                                        <TableCell>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => openModal(v)}
-                                                title="View Details"
-                                                className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                            </Button>
-                                        </TableCell>
-                                        <TableCell className="font-medium">
-                                            <div>
-                                                {v.name}
-                                                <div className="text-xs text-muted-foreground font-normal">{v.districtName}</div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                variant="outline"
-                                                className={cn(
-                                                    "font-medium",
-                                                    v.stage.toLowerCase().includes('13 published')
-                                                        ? 'bg-green-100 text-green-700 border-green-300'
-                                                        : v.stage.toLowerCase().includes('9(2)')
-                                                            ? 'bg-blue-100 text-blue-700 border-blue-300'
-                                                            : v.stage.toLowerCase().includes('above 90%')
-                                                                ? 'bg-amber-100 text-amber-700 border-amber-300'
-                                                                : 'bg-gray-100 text-gray-700 border-gray-300'
-                                                )}
-                                            >
-                                                {v.stage}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="text-sm text-gray-700">
-                                                {v.headSurveyor}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                variant="outline"
-                                                className={cn("font-medium", getStatusBadge(percent))}
-                                            >
-                                                {status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="font-medium font-mono">
-                                            {formatPercent(percent)}
-                                        </TableCell>
-                                        <TableCell className="font-medium font-mono">
-                                            <Badge
-                                                variant="outline"
-                                                className={cn("font-semibold", getStatusBadge(v.overall_percent))}
-                                            >
-                                                {formatPercent(v.overall_percent)}
-                                            </Badge>
-                                        </TableCell>
-                                        {items.map((item, idx) => (
-                                            <TableCell key={idx}>
-                                                <div className="flex items-center gap-2">
-                                                    <div className={cn(
-                                                        "w-2 h-2 rounded-full shrink-0",
-                                                        item.status === 'Completed' ? "bg-green-500" : "bg-red-400"
-                                                    )} />
-                                                    <span className="text-xs text-muted-foreground truncate max-w-[150px]" title={String(item.raw)}>
-                                                        {formatValue(item.value, item.raw)}
-                                                    </span>
-                                                </div>
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                )
-                            })}
-                            {paginatedVillages.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={7 + itemColumns.length} className="h-24 text-center text-muted-foreground">
-                                        No villages found matching your filters.
+                            return (
+                                <TableRow key={v.id + i} className="hover:bg-gray-50">
+                                    <TableCell>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => openModal(v)}
+                                            title="View Details"
+                                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                        >
+                                            <Eye className="w-4 h-4" />
+                                        </Button>
                                     </TableCell>
+                                    <TableCell className="font-medium">
+                                        <div>
+                                            {v.name}
+                                            <div className="text-xs text-muted-foreground font-normal">{v.districtName}</div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge
+                                            variant="outline"
+                                            className={cn(
+                                                "font-medium",
+                                                v.stage.toLowerCase().includes('13 published')
+                                                    ? 'bg-green-100 text-green-700 border-green-300'
+                                                    : v.stage.toLowerCase().includes('9(2)')
+                                                        ? 'bg-blue-100 text-blue-700 border-blue-300'
+                                                        : v.stage.toLowerCase().includes('above 90%')
+                                                            ? 'bg-amber-100 text-amber-700 border-amber-300'
+                                                            : 'bg-gray-100 text-gray-700 border-gray-300'
+                                            )}
+                                        >
+                                            {v.stage}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="text-sm text-gray-700">
+                                            {v.headSurveyor}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge
+                                            variant="outline"
+                                            className={cn("font-medium", getStatusBadge(percent))}
+                                        >
+                                            {status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="font-medium font-mono">
+                                        {formatPercent(percent)}
+                                    </TableCell>
+                                    <TableCell className="font-medium font-mono">
+                                        <Badge
+                                            variant="outline"
+                                            className={cn("font-semibold", getStatusBadge(v.overall_percent))}
+                                        >
+                                            {formatPercent(v.overall_percent)}
+                                        </Badge>
+                                    </TableCell>
+                                    {items.map((item, idx) => (
+                                        <TableCell key={idx}>
+                                            <div className="flex items-center gap-2">
+                                                <div className={cn(
+                                                    "w-2 h-2 rounded-full shrink-0",
+                                                    item.status === 'Completed' ? "bg-green-500" : "bg-red-400"
+                                                )} />
+                                                <span className="text-xs text-muted-foreground truncate max-w-[150px]" title={String(item.raw)}>
+                                                    {formatValue(item.value, item.raw)}
+                                                </span>
+                                            </div>
+                                        </TableCell>
+                                    ))}
                                 </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
+                            )
+                        })}
+                        {paginatedVillages.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={7 + itemColumns.length} className="h-24 text-center text-muted-foreground">
+                                    No villages found matching your filters.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
             </div>
 
             {/* Pagination */}

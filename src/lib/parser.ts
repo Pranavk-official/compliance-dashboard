@@ -24,8 +24,15 @@ export const parseExcel = async (file: File): Promise<District[]> => {
         for (let i = 1; i < workbook.SheetNames.length; i++) {
             const sheetName = workbook.SheetNames[i];
 
-            // Skip 'test' sheet (case-insensitive)
-            if (sheetName.toLowerCase() === 'test') {
+            // Skip 'test' and specific ignored sheets (case-insensitive)
+            const lowerSheetName = sheetName.toLowerCase().trim();
+            if (
+                lowerSheetName === 'test' ||
+                lowerSheetName === 'sheet 17' ||
+                lowerSheetName === 'sheet 128' ||
+                lowerSheetName === 'sheet17' ||
+                lowerSheetName === 'sheet128'
+            ) {
                 continue;
             }
 
